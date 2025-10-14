@@ -1,0 +1,243 @@
+// Database: PostgreSQL | ORM: Prisma
+// Normalized to 3NF for Quiz Tournament Application
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique @db.VarChar(50)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @db.VarChar(255) // bcrypt hashed (≥12 rounds)
+  avatarUrl    String?  @db.VarChar(500) // URL only, not actual image
+  role         UserRole @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  hostedMatches Match[]        @relation("MatchHost")
+  players       Player[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// ============================================
+// AUTHENTICATION
+// ============================================
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique @db.VarChar(500)
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ============================================
+// QUESTION BANK (Scraped Questions)
+// ============================================
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.VarChar(500)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  questions Question[]
+  matches   Match[]
+
+  @@map("categories")
+}
+
+model Question {
+  id         String           @id @default(uuid())
+  text       String           @db.Text
+  categoryId String
+  difficulty Difficulty       @default(MEDIUM)
+  source     String?          @db.VarChar(255) // Where it was scraped from
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  // Relations
+  category      Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  answers       Answer[]
+  playerAnswers PlayerAnswer[]
+  matchQuestions MatchQuestion[]
+
+  @@index([categoryId])
+  @@index([difficulty])
+  @@map("questions")
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Answer {
+  id         String  @id @default(uuid())
+  questionId String
+  text       String  @db.VarChar(500)
+  isCorrect  Boolean @default(false)
+
+  // Relations
+  question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  playerAnswers PlayerAnswer[]
+
+  @@index([questionId])
+  @@map("answers")
+}
+
+// ============================================
+// MATCH MANAGEMENT
+// ============================================
+
+model Match {
+  id                 String      @id @default(uuid())
+  title              String?     @db.VarChar(100)
+  hostUserId         String
+  categoryId         String?
+  difficulty         Difficulty? // Filter questions by difficulty
+  perQuestionTimeMs  Int         @default(20000) // 20 seconds per question
+  maxPlayers         Int         @default(10)
+  status             MatchStatus @default(WAITING)
+  scheduledStartTime DateTime? // Optional scheduled start
+  actualStartTime    DateTime?
+  endTime            DateTime?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  // Relations
+  host           User            @relation("MatchHost", fields: [hostUserId], references: [id], onDelete: Cascade)
+  category       Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  players        Player[]
+  matchQuestions MatchQuestion[]
+  invitations    Invitation[]
+
+  @@index([hostUserId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([scheduledStartTime])
+  @@map("matches")
+}
+
+enum MatchStatus {
+  WAITING  // Lobby, waiting for players
+  READY    // All players ready
+  ACTIVE   // Match in progress
+  FINISHED // Match completed
+  CANCELLED
+}
+
+model Player {
+  id             String   @id @default(uuid())
+  matchId        String
+  userId         String
+  score          Int      @default(0)
+  isReady        Boolean  @default(false)
+  joinedAt       DateTime @default(now())
+  leftAt         DateTime?
+  rank           Int? // Final rank after match ends
+  avgResponseMs  Float?   // Average response time for tie-breaking
+
+  // Relations
+  match         Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerAnswers PlayerAnswer[]
+
+  @@unique([matchId, userId]) // A user can only join a match once
+  @@index([matchId])
+  @@index([userId])
+  @@map("players")
+}
+
+// Junction table for Match <-> Question (many-to-many)
+model MatchQuestion {
+  id           String   @id @default(uuid())
+  matchId      String
+  questionId   String
+  roundNumber  Int      @default(1) // Round 1-4
+  questionOrder Int     // Order within round (1-7)
+  shownAt      DateTime?
+  
+  // Relations
+  match    Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, roundNumber, questionOrder])
+  @@index([matchId])
+  @@index([questionId])
+  @@map("match_questions")
+}
+
+model PlayerAnswer {
+  id           String   @id @default(uuid())
+  playerId     String
+  questionId   String
+  answerId     String?  // NULL if time ran out
+  answeredAtMs Int?     // Time taken to answer (milliseconds from question shown)
+  isCorrect    Boolean  @default(false)
+  pointsEarned Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  player   Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer   Answer?  @relation(fields: [answerId], references: [id], onDelete: SetNull)
+
+  @@unique([playerId, questionId]) // One answer per question per player
+  @@index([playerId])
+  @@index([questionId])
+  @@map("player_answers")
+}
+
+// ============================================
+// INVITATIONS
+// ============================================
+
+model Invitation {
+  id        String           @id @default(uuid())
+  matchId   String
+  email     String           @db.VarChar(255)
+  status    InvitationStatus @default(PENDING)
+  sentAt    DateTime         @default(now())
+  respondedAt DateTime?
+
+  // Relations
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@index([matchId])
+  @@index([email])
+  @@map("invitations")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
