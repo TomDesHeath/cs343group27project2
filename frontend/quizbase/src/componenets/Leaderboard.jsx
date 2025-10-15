@@ -1,4 +1,8 @@
-const sampleEntries = [
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import useApiClient from "../hooks/useApiClient.js";
+
+const FALLBACK_ENTRIES = [
   { name: "Sasha", score: 1820, streak: 7 },
   { name: "Kai", score: 1745, streak: 5 },
   { name: "Morgan", score: 1690, streak: 6 },
@@ -6,7 +10,97 @@ const sampleEntries = [
   { name: "Reese", score: 1580, streak: 3 },
 ];
 
-export default function Leaderboard({ entries = sampleEntries, title = "Leaderboard" }) {
+const aggregateLeaderboard = (matches) => {
+  if (!Array.isArray(matches) || matches.length === 0) {
+    return [];
+  }
+  const totals = new Map();
+  for (const match of matches) {
+    const players = Array.isArray(match?.players) ? match.players : [];
+    for (const player of players) {
+      const key = player.userId ?? player.id;
+      if (!key) {
+        continue;
+      }
+      const current = totals.get(key) ?? {
+        name: player.User?.username ?? player.username ?? player.displayName ?? player.userId ?? "Player",
+        score: 0,
+        streak: player.streak ?? 0,
+      };
+      current.score = Math.max(current.score, player.score ?? 0);
+      current.streak = Math.max(current.streak ?? 0, player.streak ?? 0);
+      totals.set(key, current);
+    }
+  }
+  return Array.from(totals.values())
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+    .slice(0, 10);
+};
+
+export default function Leaderboard({ entries, title = "Leaderboard" }) {
+  const client = useApiClient();
+  const shouldFetch = !entries;
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["matches", "leaderboard"],
+    queryFn: () => client.get("/matches"),
+    enabled: shouldFetch,
+    staleTime: 30_000,
+  });
+
+  const derivedEntries = useMemo(() => {
+    if (entries && entries.length > 0) {
+      return entries;
+    }
+    const aggregated = aggregateLeaderboard(data);
+    if (aggregated.length > 0) {
+      return aggregated;
+    }
+    return FALLBACK_ENTRIES;
+  }, [entries, data]);
+
+  if (shouldFetch && isLoading) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 pb-12 pt-12">
+        <section className="animate-pulse rounded-lg border border-border bg-surface shadow-sm">
+          <header className="border-b border-border px-4 py-3">
+            <div className="h-4 w-32 rounded bg-surface-subdued" />
+          </header>
+          <ul className="divide-y divide-border/60">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <li key={index} className="flex items-center justify-between px-4 py-3">
+                <span className="flex items-center gap-3">
+                  <span className="h-6 w-6 rounded-full bg-surface-subdued" />
+                  <span className="h-4 w-24 rounded bg-surface-subdued" />
+                </span>
+                <span className="flex items-center gap-6">
+                  <span className="h-4 w-12 rounded bg-surface-subdued" />
+                  <span className="h-4 w-12 rounded bg-surface-subdued" />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    );
+  }
+
+  if (shouldFetch && isError) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 pb-12 pt-12">
+        <section className="rounded-lg border border-accent-danger bg-surface shadow-sm">
+          <header className="border-b border-accent-danger/40 px-4 py-3">
+            <h2 className="text-base font-semibold text-content">{title}</h2>
+          </header>
+          <div className="px-4 py-3 text-sm text-accent-danger">
+            Failed to load leaderboard: {error?.message ?? "Unknown error"}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  const items = derivedEntries ?? FALLBACK_ENTRIES;
+
   return (
     <div className="mx-auto max-w-3xl px-4 pb-12 pt-12">
     <section className="rounded-lg border border-border bg-surface shadow-sm">
@@ -14,7 +108,7 @@ export default function Leaderboard({ entries = sampleEntries, title = "Leaderbo
         <h2 className="text-base font-semibold text-content">{title}</h2>
       </header>
       <ul className="divide-y divide-border/60">
-        {entries.map((entry, index) => (
+        {items.map((entry, index) => (
           <li key={entry.name} className="flex items-center justify-between px-4 py-3 text-sm text-content">
             <span className="flex items-center gap-3">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-50 text-xs font-medium text-brand-600">
@@ -29,7 +123,7 @@ export default function Leaderboard({ entries = sampleEntries, title = "Leaderbo
               </span>
               <span className="flex flex-col items-end">
                 <span className="text-xs uppercase tracking-wide text-content-subtle">Streak</span>
-                <span className="font-semibold text-content">{entry.streak}</span>
+                <span className="font-semibold text-content">{entry.streak ?? "—"}</span>
               </span>
             </span>
           </li>

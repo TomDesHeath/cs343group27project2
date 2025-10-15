@@ -177,13 +177,16 @@ CREATE INDEX "matches_status_idx" ON "matches"("status");
 CREATE INDEX "matches_scheduledStartTime_idx" ON "matches"("scheduledStartTime");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "players_matchId_userId_key" ON "players"("matchId", "userId");
+
+-- CreateIndex
 CREATE INDEX "players_matchId_idx" ON "players"("matchId");
 
 -- CreateIndex
 CREATE INDEX "players_userId_idx" ON "players"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "players_matchId_userId_key" ON "players"("matchId", "userId");
+CREATE UNIQUE INDEX "match_questions_matchId_roundNumber_questionOrder_key" ON "match_questions"("matchId", "roundNumber", "questionOrder");
 
 -- CreateIndex
 CREATE INDEX "match_questions_matchId_idx" ON "match_questions"("matchId");
@@ -192,16 +195,13 @@ CREATE INDEX "match_questions_matchId_idx" ON "match_questions"("matchId");
 CREATE INDEX "match_questions_questionId_idx" ON "match_questions"("questionId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "match_questions_matchId_roundNumber_questionOrder_key" ON "match_questions"("matchId", "roundNumber", "questionOrder");
+CREATE UNIQUE INDEX "player_answers_playerId_questionId_key" ON "player_answers"("playerId", "questionId");
 
 -- CreateIndex
 CREATE INDEX "player_answers_playerId_idx" ON "player_answers"("playerId");
 
 -- CreateIndex
 CREATE INDEX "player_answers_questionId_idx" ON "player_answers"("questionId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "player_answers_playerId_questionId_key" ON "player_answers"("playerId", "questionId");
 
 -- CreateIndex
 CREATE INDEX "invitations_matchId_idx" ON "invitations"("matchId");

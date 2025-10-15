@@ -1,6 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import useApiClient from "../hooks/useApiClient.js";
 
-const CATEGORY_OPTIONS = [
+const FALLBACK_CATEGORY_OPTIONS = [
   "General Knowledge",
   "Science",
   "Entertainment",
@@ -27,18 +30,29 @@ const generateId = () => {
   return `round-${Math.random().toString(36).slice(2, 9)}`;
 };
 
-function createDefaultRound(index) {
+const createDefaultRound = (index, categories = FALLBACK_CATEGORY_OPTIONS) => {
+  const pool = categories.length > 0 ? categories : FALLBACK_CATEGORY_OPTIONS;
   return {
     id: generateId(),
     number: index + 1,
     label: `Round ${index + 1}`,
-    category: CATEGORY_OPTIONS[index % CATEGORY_OPTIONS.length],
+    category: pool[index % pool.length],
     difficulty: DIFFICULTY_OPTIONS[index % DIFFICULTY_OPTIONS.length],
     questionCount: 5,
   };
+};
+
+function normaliseInvitees(value) {
+  return value
+    .split(/[,\n]/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
 }
 
 function MatchCreator() {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+
   const [matchName, setMatchName] = useState("Friday Trivia Night");
   const [scheduleType, setScheduleType] = useState("now");
   const [startTime, setStartTime] = useState("");
@@ -47,7 +61,43 @@ function MatchCreator() {
   const [rounds, setRounds] = useState(() => [createDefaultRound(0), createDefaultRound(1)]);
   const [notes, setNotes] = useState("Winner chooses the next theme.");
   const [invitees, setInvitees] = useState("friend@campus.edu, rival@campus.edu");
-  const [draftConfig, setDraftConfig] = useState(null);
+  const [creationResult, setCreationResult] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+
+  const { data: categoriesData, isLoading: categoriesLoading, isError: categoriesError, error: categoriesErrorObj } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => client.get("/categories"),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const categories = useMemo(() => (Array.isArray(categoriesData) ? categoriesData : []), [categoriesData]);
+  const categoryNames = useMemo(() => {
+    if (categories.length > 0) {
+      return categories.map((category) => category.name);
+    }
+    return FALLBACK_CATEGORY_OPTIONS;
+  }, [categories]);
+
+  useEffect(() => {
+    if (categories.length === 0 || selectedCategoryId) {
+      return;
+    }
+    setSelectedCategoryId(categories[0].id);
+  }, [categories, selectedCategoryId]);
+
+  useEffect(() => {
+    if (categoryNames.length === 0) {
+      return;
+    }
+    setRounds((previous) =>
+      previous.map((round, index) => {
+        if (categoryNames.includes(round.category)) {
+          return round;
+        }
+        return createDefaultRound(index, categoryNames);
+      }),
+    );
+  }, [categoryNames]);
 
   const canAddRound = rounds.length < MAX_ROUNDS;
   const canRemoveRound = rounds.length > 1;
@@ -87,7 +137,7 @@ function MatchCreator() {
     if (!canAddRound) {
       return;
     }
-    setRounds((prev) => [...prev, createDefaultRound(prev.length)]);
+    setRounds((prev) => [...prev, createDefaultRound(prev.length, categoryNames)]);
   };
 
   const handleRemoveRound = (roundId) => {
@@ -97,25 +147,41 @@ function MatchCreator() {
     setRounds((prev) => prev.filter((round) => round.id !== roundId));
   };
 
+  const createMatch = useMutation({
+    mutationFn: (payload) => client.post("/matches", payload),
+    onSuccess: (match, variables) => {
+      setCreationResult({ match, submitted: variables });
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+    },
+    onError: (err) => {
+      console.error("Failed to create match", err);
+    },
+  });
+
   const handleSubmit = (event) => {
     event.preventDefault();
     const payload = {
-      matchName,
-      scheduleType,
-      startTime: scheduleType === "later" ? startTime : "Start immediately",
-      privacy,
-      questionTimeLimit,
-      rounds,
-      notes,
-      invitees: invitees
-        .split(/[,\n]/)
-        .map((value) => value.trim())
-        .filter(Boolean),
-      totalQuestions,
-      code: matchCode,
+      title: matchName.trim() || "Untitled match",
+      categoryId: selectedCategoryId || null,
+      perQuestionMs: Math.max(5, Number(questionTimeLimit) || 20) * 1000,
     };
-    setDraftConfig(payload);
+    setCreationResult({
+      match: null,
+      submitted: {
+        ...payload,
+        scheduleType,
+        startTime: scheduleType === "later" ? startTime : null,
+        privacy,
+        invitees: normaliseInvitees(invitees),
+        rounds,
+        notes,
+      },
+    });
+    createMatch.mutate(payload);
   };
+
+  const submitting = createMatch.isPending;
+  const creationError = createMatch.isError ? createMatch.error : null;
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 text-content">
@@ -147,6 +213,31 @@ function MatchCreator() {
                 maxLength={60}
                 required
               />
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-sm font-semibold text-content">Primary category</label>
+              <select
+                value={selectedCategoryId}
+                onChange={(event) => setSelectedCategoryId(event.target.value)}
+                className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                disabled={categoriesLoading}
+              >
+                <option value="">Any category</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              {categoriesLoading && (
+                <p className="text-xs text-content-muted">Loading categories…</p>
+              )}
+              {categoriesError && (
+                <p className="text-xs text-accent-danger">
+                  Failed to load categories: {categoriesErrorObj?.message ?? "Unknown error"}. Using defaults.
+                </p>
+              )}
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
@@ -262,7 +353,7 @@ function MatchCreator() {
                         onChange={(event) => handleRoundChange(round.id, "category", event.target.value)}
                         className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                       >
-                        {CATEGORY_OPTIONS.map((category) => (
+                        {categoryNames.map((category) => (
                           <option key={category} value={category}>
                             {category}
                           </option>
@@ -301,30 +392,16 @@ function MatchCreator() {
               ))}
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={handleAddRound}
-                disabled={!canAddRound}
-                className="inline-flex items-center gap-2 rounded-md border border-brand-500 px-3 py-2 text-sm font-semibold text-brand-600 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:border-border disabled:text-content-muted"
-              >
-                + Add round
-              </button>
-              {!canAddRound && <span className="text-xs text-content-muted">Maximum of {MAX_ROUNDS} rounds reached.</span>}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-content">Invite players</label>
-              <textarea
-                value={invitees}
-                onChange={(event) => setInvitees(event.target.value)}
-                rows={3}
-                placeholder="player1@campus.edu, player2@campus.edu"
-                className="w-full rounded-md border border-border px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
-              />
-              <p className="text-xs text-content-muted">Separate addresses with commas or line breaks. Invites are sent when the backend wiring is in place.</p>
+            <div className="flex flex-wrap gap-3">
+              {canAddRound && (
+                <button
+                  type="button"
+                  onClick={handleAddRound}
+                  className="rounded-md border border-dashed border-brand-300 px-4 py-2 text-sm font-medium text-brand-600 transition hover:border-brand-500 hover:bg-brand-50"
+                >
+                  Add round
+                </button>
+              )}
             </div>
 
             <div className="grid gap-2">
@@ -339,14 +416,27 @@ function MatchCreator() {
             </div>
           </div>
 
+          <div className="grid gap-2">
+            <label className="text-sm font-semibold text-content">Invite players</label>
+            <textarea
+              value={invitees}
+              onChange={(event) => setInvitees(event.target.value)}
+              rows={2}
+              placeholder="friend@campus.edu, rival@campus.edu"
+              className="w-full rounded-md border border-border px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+            />
+            <p className="text-xs text-content-muted">Separate emails or usernames with commas or new lines.</p>
+          </div>
+
           <div className="flex items-center gap-3">
             <button
               type="submit"
-              className="rounded-md bg-brand-500 px-5 py-2 text-sm font-semibold text-content-inverted transition hover:bg-brand-600"
+              className="rounded-md bg-brand-500 px-5 py-2 text-sm font-semibold text-content-inverted transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-surface-subdued disabled:text-content-muted"
+              disabled={submitting}
             >
-              Create match lobby
+              {submitting ? "Creating…" : "Create match lobby"}
             </button>
-            <p className="text-xs text-content-muted">Configuration is stored locally until the backend endpoint is connected.</p>
+            <p className="text-xs text-content-muted">Match details sync with the backend when you submit.</p>
           </div>
         </form>
 
@@ -392,16 +482,47 @@ function MatchCreator() {
           <section className="space-y-2">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-content-muted">Next steps</h2>
             <p>
-              After creation you will land in the waiting room to approve players and share the lobby code. Match settings map directly to the project specification.
+              After creation you can jump straight into the waiting room to approve players and share the lobby code.
             </p>
           </section>
 
-          {draftConfig && (
-            <section className="space-y-2 rounded-md border border-dashed border-brand-300 bg-brand-50 px-3 py-3 text-xs text-brand-700">
-              <p className="text-xs font-semibold uppercase tracking-wide">Draft saved</p>
-              <p className="text-sm text-brand-700">
-                Match "{draftConfig.matchName}" prepared with {draftConfig.rounds.length} round{draftConfig.rounds.length > 1 ? "s" : ""}. Wire the POST /matches endpoint to submit this payload.
+          {creationError && (
+            <section className="space-y-2 rounded-md border border-accent-danger/50 bg-accent-danger/10 px-3 py-3 text-xs text-accent-danger">
+              <p className="text-xs font-semibold uppercase tracking-wide">Creation failed</p>
+              <p>
+                {creationError?.message ?? "An unknown error occurred while creating the match. Please try again."}
               </p>
+            </section>
+          )}
+
+          {creationResult?.match && (
+            <section className="space-y-3 rounded-md border border-dashed border-brand-300 bg-brand-50 px-3 py-3 text-xs text-brand-700">
+              <p className="text-xs font-semibold uppercase tracking-wide">Match created</p>
+              <p className="text-sm text-brand-700">
+                Match "{creationResult.match.title ?? matchName}" is live. Share code{" "}
+                <span className="font-mono">{creationResult.match.id.slice(0, 8)}</span> with players.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to={`/play?match=${creationResult.match.id}&as=host`}
+                  className="inline-flex items-center justify-center rounded-md bg-brand-500 px-3 py-1.5 font-medium text-content-inverted transition hover:bg-brand-600"
+                >
+                  Open lobby
+                </Link>
+                <Link
+                  to="/lobby"
+                  className="inline-flex items-center justify-center rounded-md border border-brand-500 px-3 py-1.5 font-medium text-brand-600 transition hover:bg-brand-100"
+                >
+                  Back to lobby
+                </Link>
+              </div>
+            </section>
+          )}
+
+          {creationResult && !creationResult.match && (
+            <section className="space-y-2 rounded-md border border-dashed border-border bg-surface px-3 py-3 text-xs text-content-muted">
+              <p className="text-xs font-semibold uppercase tracking-wide">Submitting…</p>
+              <p>Sending configuration to backend. Hang tight.</p>
             </section>
           )}
         </aside>

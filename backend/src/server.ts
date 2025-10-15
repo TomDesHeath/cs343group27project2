@@ -6,30 +6,20 @@
  * - Logs a message when the server is up and running.
  */
 
-import express from "express";
-import cors from "cors";
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { initSockets } from "./sockets/index";
+import { app } from "./app";
 
-const app = express();
+// Ensure env is loaded (for PORT, etc.)
 dotenv.config();
-
-const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
-
-app.use(cors({ origin: CORS_ORIGIN === "*" ? true : CORS_ORIGIN }));
-app.use(express.json());
-
 const httpServer = createServer(app);
 const io = new Server(httpServer, { cors: { origin: "*" }, serveClient: true });
 
 initSockets(io);
-
-// simple health route
-app.get("/healthz", (_req, res) => res.json({ ok: true }));
 
 // categories route for tester.html
 app.get("/categories", (_req, res) => {

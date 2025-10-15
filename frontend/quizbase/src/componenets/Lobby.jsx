@@ -1,44 +1,58 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import useApiClient from "../hooks/useApiClient.js";
 import Leaderboard from "./Leaderboard";
 
-const communityMatches = [
-  {
-    code: "AB7Q",
-    host: "Lena",
-    category: "Science & Nature",
-    fills: "12 / 16 players",
-    startsIn: "Starts in 3 min",
-  },
-  {
-    code: "Z4PK",
-    host: "Diego",
-    category: "Movies & TV",
-    fills: "8 / 12 players",
-    startsIn: "Starts in 6 min",
-  },
-  {
-    code: "M9TN",
-    host: "Aya",
-    category: "World History",
-    fills: "5 / 10 players",
-    startsIn: "Waiting on host",
-  },
-];
+const STATUS_LABELS = {
+  WAITING: "Waiting for players",
+  READY: "Ready",
+  ACTIVE: "Live",
+  FINISHED: "Finished",
+  CANCELLED: "Cancelled",
+};
 
 export default function Lobby() {
   const navigate = useNavigate();
+  const client = useApiClient();
+  const queryClient = useQueryClient();
   const [matchCode, setMatchCode] = useState("");
+  const [joiningId, setJoiningId] = useState(null);
+
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["matches", "list"],
+    queryFn: () => client.get("/matches"),
+    staleTime: 10_000,
+  });
+
+  const matches = useMemo(() => (Array.isArray(data) ? data : []), [data]);
+
+  const joinMatch = useMutation({
+    mutationFn: async (matchId) => client.post(`/matches/${matchId}/join`, {}),
+    onMutate: (matchId) => {
+      setJoiningId(matchId);
+    },
+    onSuccess: (_data, matchId) => {
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      navigate(`/play?match=${matchId}`);
+    },
+    onError: (joinError) => {
+      console.error("Failed to join match", joinError);
+    },
+    onSettled: () => {
+      setJoiningId(null);
+    },
+  });
 
   const handlePrivateJoin = (event) => {
     event.preventDefault();
-    const trimmed = matchCode.trim().toUpperCase();
+    const trimmed = matchCode.trim();
 
     if (!trimmed) {
       return;
     }
 
-    navigate(`/play?match=${trimmed}`);
+    joinMatch.mutate(trimmed);
   };
 
   return (
@@ -55,48 +69,88 @@ export default function Lobby() {
         <article className="md:col-span-2 rounded-lg border border-border bg-surface p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase tracking-wide text-brand-600">
-                Public lobbies
-              </p>
-              <h2 className="mt-1 text-xl font-semibold text-content">
-                Join a community match
-              </h2>
+              <p className="text-xs uppercase tracking-wide text-brand-600">Public lobbies</p>
+              <h2 className="mt-1 text-xl font-semibold text-content">Join a community match</h2>
             </div>
-            <span className="text-xs font-medium uppercase tracking-wide text-content-subtle">
-              Live now: {communityMatches.length}
-            </span>
+            <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-content-subtle">
+              <span>Live now: {matches.length}</span>
+              <button
+                type="button"
+                className="rounded border border-border px-2 py-1 text-[11px] font-medium uppercase tracking-wide transition hover:border-brand-500 hover:text-brand-600"
+                onClick={() => refetch()}
+                disabled={isLoading}
+              >
+                Refresh
+              </button>
+            </div>
           </div>
 
-          <ul className="mt-6 space-y-4">
-            {communityMatches.map((match) => (
-              <li key={match.code}>
-                <Link
-                  to={`/play?match=${match.code}`}
-                  className="flex flex-col gap-4 rounded-md border border-border px-5 py-4 transition hover:border-brand-400 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="flex items-center gap-2 text-sm font-semibold text-content">
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-50 text-xs font-medium text-brand-600">
-                        #{match.code}
-                      </span>
-                      {match.category}
-                    </p>
-                    <p className="mt-1 text-xs text-content-muted">
-                      Hosted by {match.host}
-                    </p>
+          {isLoading ? (
+            <ul className="mt-6 space-y-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <li key={index} className="flex animate-pulse flex-col gap-4 rounded-md border border-border px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-surface-subdued text-xs" />
+                    <span className="h-4 w-40 rounded bg-surface-subdued" />
                   </div>
-                  <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-content-muted">
-                    <span className="rounded-full bg-surface-subdued px-3 py-1 text-content">
-                      {match.fills}
-                    </span>
-                    <span className="rounded-full bg-brand-50 px-3 py-1 text-brand-500">
-                      {match.startsIn}
-                    </span>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <span className="h-4 w-24 rounded bg-surface-subdued" />
+                    <span className="h-4 w-20 rounded bg-surface-subdued" />
                   </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          ) : isError ? (
+            <div className="mt-6 rounded border border-accent-danger bg-surface-subdued px-4 py-3 text-sm text-accent-danger">
+              Failed to load matches: {error?.message ?? "Unknown error"}
+            </div>
+          ) : matches.length === 0 ? (
+            <div className="mt-6 rounded border border-border bg-surface-subdued px-4 py-5 text-sm text-content-muted">
+              No public lobbies available right now. Create one or refresh in a moment.
+            </div>
+          ) : (
+            <ul className="mt-6 space-y-4">
+              {matches.map((match) => {
+                const status = STATUS_LABELS[match.status] ?? match.status ?? "Unknown";
+                const categoryName = match.Category?.name ?? "Any category";
+                const playerCount = Array.isArray(match.players) ? match.players.length : 0;
+                const maxPlayers = match.maxPlayers ?? "∞";
+                return (
+                  <li key={match.id}>
+                    <div className="flex flex-col gap-4 rounded-md border border-border px-5 py-4 transition hover:border-brand-400 hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="flex items-center gap-2 text-sm font-semibold text-content">
+                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-50 text-xs font-medium text-brand-600">
+                            #{(match.id ?? "").slice(0, 4).toUpperCase()}
+                          </span>
+                          {match.title ?? "Untitled match"}
+                        </p>
+                        <p className="mt-1 text-xs text-content-muted">
+                          {categoryName} • Host: {match.hostUserId ?? "Unknown host"}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-content-muted">
+                        <span className="rounded-full bg-surface-subdued px-3 py-1 text-content">
+                          {playerCount} / {maxPlayers} players
+                        </span>
+                        <span className="rounded-full bg-brand-50 px-3 py-1 text-brand-500">
+                          {status}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => joinMatch.mutate(match.id)}
+                          className="rounded-md bg-brand-500 px-3 py-1 text-sm font-medium text-content-inverted transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-surface-subdued disabled:text-content-muted"
+                          disabled={!match?.id || joinMatch.isPending || joiningId === match.id}
+                        >
+                          {joiningId === match.id && joinMatch.isPending ? "Joining..." : "Join"}
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </article>
 
         <aside className="rounded-lg border border-border bg-surface p-6 shadow-sm">
@@ -115,16 +169,15 @@ export default function Lobby() {
                   name="match-code"
                   placeholder="e.g. XY7P"
                   className="w-full rounded-md border border-border px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
-                  maxLength={6}
                   value={matchCode}
-                  onChange={(event) => setMatchCode(event.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
+                  onChange={(event) => setMatchCode(event.target.value)}
                 />
                 <button
                   type="submit"
                   className="inline-flex w-full items-center justify-center rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-content-inverted transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-surface-subdued disabled:text-content-muted"
-                  disabled={!matchCode.trim()}
+                  disabled={!matchCode.trim() || joinMatch.isPending}
                 >
-                  Enter match
+                  {joinMatch.isPending ? "Joining..." : "Enter match"}
                 </button>
               </form>
             </section>

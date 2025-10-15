@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  players      Player[]
+  matches      Match[]  @relation("UserMatches")
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  questions Question[]
+  matches   Match[]
+}
+
+model Question {
+  id            String          @id @default(cuid())
+  categoryId    String
+  prompt        String
+  options       Json
+  answer        String
+  Category      Category        @relation(fields: [categoryId], references: [id])
+  MatchQuestion MatchQuestion[]
+}
+
+model Match {
+  id             String          @id @default(cuid())
+  title          String
+  hostUserId     String
+  categoryId     String?
+  perQuestionMs  Int             @default(20000)
+  status         MatchStatus     @default(LOBBY)
+  createdAt      DateTime        @default(now())
+  Host           User            @relation("UserMatches", fields: [hostUserId], references: [id])
+  Category       Category?       @relation(fields: [categoryId], references: [id])
+  players        Player[]
+  matchQuestions MatchQuestion[]
+}
+
+model Player {
+  id       String   @id @default(cuid())
+  userId   String
+  matchId  String
+  joinedAt DateTime @default(now())
+  score    Int      @default(0)
+  User     User     @relation(fields: [userId], references: [id])
+  Match    Match    @relation(fields: [matchId], references: [id])
+  answers  Answer[]
+
+  @@unique([userId, matchId])
+}
+
+model MatchQuestion {
+  id         String   @id @default(cuid())
+  matchId    String
+  questionId String
+  order      Int
+  Match      Match    @relation(fields: [matchId], references: [id])
+  Question   Question @relation(fields: [questionId], references: [id])
+  answers    Answer[]
+
+  @@unique([matchId, order])
+}
+
+model Answer {
+  id              String        @id @default(cuid())
+  playerId        String
+  matchQuestionId String
+  selected        String?
+  correct         Boolean
+  responseMs      Int
+  Player          Player        @relation(fields: [playerId], references: [id])
+  MatchQuestion   MatchQuestion @relation(fields: [matchQuestionId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum MatchStatus {
+  LOBBY
+  LIVE
+  COMPLETE
+  CANCELLED
+}
+
