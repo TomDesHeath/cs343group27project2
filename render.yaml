@@ -1,15 +1,10 @@
-previews:
-  generation: automatic
-
 databases:
   - name: quizbase-db
-    plan: free
 
 services:
   - type: web
     name: quizbase-backend
     runtime: node
-    plan: free
     rootDir: backend
     buildCommand: |
       npm install
@@ -42,7 +37,6 @@ services:
   - type: web
     name: quizbase-frontend
     runtime: static
-    plan: free
     rootDir: frontend/quizbase
     buildCommand: |
       npm install
