@@ -1,16 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
-import { API_ORIGIN } from '../lib/apiClient.js';
 
-const deriveSocketUrl = () => {
-  const configured = import.meta.env?.VITE_SOCKET_URL;
-  if (typeof configured === 'string' && configured.trim() !== '') {
-    return configured.trim();
-  }
-  return API_ORIGIN || 'http://localhost:4000';
-};
-
-const SOCKET_URL = deriveSocketUrl();
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
 
 /**
  * Hook to manage Socket.IO connection

@@ -1,0 +1,194 @@
+openapi: 3.1.0
+info:
+  title: QuizBase API
+  version: 1.0.0
+servers:
+  - url: http://localhost:4000
+paths:
+  /health:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { ok: { type: boolean } }
+                required: [ok]
+  /api/categories:
+    get:
+      responses:
+        '200':
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Category' }
+  /api/questions:
+    get:
+      parameters:
+        - in: query
+          name: categoryId
+          schema: { type: string, nullable: true }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+      responses:
+        '200':
+          description: Questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/QuestionSummary' }
+  /api/matches:
+    post:
+      parameters: [ { $ref: '#/components/parameters/XUserId' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateMatchRequest' }
+      responses:
+        '200':
+          description: Created match
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Match' }
+  /api/matches/{id}/join:
+    post:
+      parameters: [ { $ref: '#/components/parameters/XUserId' }, { $ref: '#/components/parameters/MatchId' } ]
+      responses:
+        '200':
+          description: Match
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Match' }
+  /api/matches/{id}/start:
+    post:
+      parameters: [ { $ref: '#/components/parameters/XUserId' }, { $ref: '#/components/parameters/MatchId' } ]
+      responses:
+        '200':
+          description: State
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StateResponse' }
+  /api/matches/{id}/answer:
+    post:
+      parameters: [ { $ref: '#/components/parameters/XUserId' }, { $ref: '#/components/parameters/MatchId' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AnswerRequest' }
+      responses:
+        '200':
+          description: Answer result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnswerResponse' }
+  /api/matches/{id}/state:
+    get:
+      parameters: [ { $ref: '#/components/parameters/MatchId' } ]
+      responses:
+        '200':
+          description: State
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StateResponse' }
+  /api/matches/{id}/leaderboard:
+    get:
+      parameters: [ { $ref: '#/components/parameters/MatchId' } ]
+      responses:
+        '200':
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/LeaderboardEntry' }
+components:
+  parameters:
+    XUserId:
+      in: header
+      name: x-user-id
+      required: true
+      schema: { type: string }
+    MatchId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+  schemas:
+    Category:
+      type: object
+      properties: { id: { type: string }, name: { type: string } }
+      required: [id, name]
+    QuestionSummary:
+      type: object
+      properties:
+        id: { type: string }
+        prompt: { type: string }
+        categoryId: { type: string, nullable: true }
+      required: [id, prompt]
+    CreateMatchRequest:
+      type: object
+      properties:
+        title: { type: string }
+        perQuestionMs: { type: integer, minimum: 1000 }
+        categoryId: { type: string, nullable: true }
+      required: [title, perQuestionMs]
+    Match:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        hostUserId: { type: string }
+        categoryId: { type: string, nullable: true }
+        perQuestionMs: { type: integer }
+        status: { type: string, enum: [LOBBY, LIVE, ENDED] }
+        createdAt: { type: string, format: date-time }
+        players:
+          type: array
+          items:
+            type: object
+            properties:
+              userId: { type: string }
+              score: { type: integer }
+    AnswerRequest:
+      type: object
+      properties:
+        questionId: { type: string }
+        chosen: { type: string }
+        responseMs: { type: integer, minimum: 0 }
+      required: [questionId, chosen, responseMs]
+    AnswerResponse:
+      type: object
+      properties:
+        ok: { type: boolean }
+        isCorrect: { type: boolean }
+        scoreDelta: { type: integer }
+        total: { type: integer }
+        dbScore: { type: integer, nullable: true }
+    StateResponse:
+      type: object
+      properties:
+        status: { type: string, enum: [LOBBY, LIVE, ENDED] }
+        currentIndex: { type: integer, nullable: true }
+        elapsedMs: { type: integer }
+        players:
+          type: array
+          items:
+            type: object
+            properties:
+              userId: { type: string }
+              score: { type: integer }
+              answered: { type: boolean }
+    LeaderboardEntry:
+      type: object
+      properties:
+        userId: { type: string }
+        score: { type: integer }
+

@@ -1,25 +1,4 @@
-const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"]);
-
-const deriveDefaultBase = () => {
-  const envBase = import.meta.env?.VITE_API_BASE_URL;
-  if (typeof envBase === "string" && envBase.trim() !== "") {
-    return envBase.trim();
-  }
-
-  if (typeof window !== "undefined" && window.location) {
-    const { origin, hostname } = window.location;
-    if (origin && hostname) {
-      const normalisedHost = hostname.trim().toLowerCase();
-      if (!LOCAL_HOSTS.has(normalisedHost)) {
-        return origin;
-      }
-    }
-  }
-
-  return "http://localhost:4000";
-};
-
-const DEFAULT_BASE = deriveDefaultBase();
+const DEFAULT_BASE = (import.meta.env?.VITE_API_BASE_URL ?? "http://localhost:4000").trim();
 
 const normaliseBase = (value) => {
   if (!value) {
@@ -33,7 +12,6 @@ const normaliseBase = (value) => {
 };
 
 const API_BASE = normaliseBase(DEFAULT_BASE);
-const API_ORIGIN = API_BASE.replace(/\/api$/, "");
 
 const buildUrl = (path, params) => {
   const target = path.startsWith("http") ? path : `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
@@ -147,4 +125,4 @@ export function createApiClient({ getAuthHeaders } = {}) {
 
 export const apiClient = createApiClient();
 
-export { API_BASE, API_ORIGIN };
+export { API_BASE };

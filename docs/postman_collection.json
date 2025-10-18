@@ -1,0 +1,12 @@
+{
+  "info": {
+    "name": "QuizBase API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    { "name": "Health", "request": { "method": "GET", "url": "http://localhost:4000/health" } },
+    { "name": "Categories", "request": { "method": "GET", "url": "http://localhost:4000/api/categories" } },
+    { "name": "Questions", "request": { "method": "GET", "url": "http://localhost:4000/api/questions" } }
+  ]
+}
+
