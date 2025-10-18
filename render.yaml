@@ -40,14 +40,17 @@ services:
       - key: BCRYPT_ROUNDS
         value: "12"
 
-  - type: static_site
+  - type: web
     name: quizbase-frontend
+    env: static
     plan: free
     buildCommand: |
       cd frontend/quizbase
       npm install
       npm run build
-    publishDir: frontend/quizbase/dist
+    startCommand: |
+      cd frontend/quizbase
+      npx serve dist -l $PORT
     envVars:
       - key: VITE_API_BASE_URL
         value: https://your-backend.onrender.com/api
