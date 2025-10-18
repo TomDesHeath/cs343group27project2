@@ -8318,5 +8318,805 @@
     "difficulty": "hard",
     "source": "opentdb",
     "contentHash": "cd75e177ce68346853e683652e0bc92256807f99"
+  },
+  {
+    "id": "opentdb:ff0f36a8813fa418d8afb7338f2cf926b08c9fd2",
+    "text": "In programming, the ternary operator is mostly defined with what symbol(s)?",
+    "choices": [
+      "??",
+      "?:",
+      "?",
+      "if then"
+    ],
+    "correctAnswer": "?:",
+    "correctAnswerIndex": 1,
+    "category": "Science: Computers",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "ff0f36a8813fa418d8afb7338f2cf926b08c9fd2"
+  },
+  {
+    "id": "opentdb:5ea4eff942be222bb313436ec83bae0254a59221",
+    "text": "When was Nintendo founded?",
+    "choices": [
+      "September 23rd, 1889",
+      "December 27th, 1894",
+      "March 4th, 1887",
+      "October 19th, 1891"
+    ],
+    "correctAnswer": "September 23rd, 1889",
+    "correctAnswerIndex": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "5ea4eff942be222bb313436ec83bae0254a59221"
+  },
+  {
+    "id": "opentdb:8101ff94e354ab2dc8ba4e8765f74a0a5aef39bb",
+    "text": "Which game was exclusive to Dreamcast?",
+    "choices": [
+      "Tetrisphere",
+      "Pen Pen TriIcelon",
+      "Sylvester &amp; Tweety in Cagey Capers",
+      "Perfect Dark"
+    ],
+    "correctAnswer": "Pen Pen TriIcelon",
+    "correctAnswerIndex": 1,
+    "category": "Entertainment: Video Games",
+    "difficulty": "hard",
+    "source": "opentdb",
+    "contentHash": "8101ff94e354ab2dc8ba4e8765f74a0a5aef39bb"
+  },
+  {
+    "id": "opentdb:6c6374fdd1f8e59cc167ace9f51dae5242000856",
+    "text": "Which one of these artists appears in the album Deltron 3030?",
+    "choices": [
+      "Lamarr Kendrick",
+      "CeeLo Green",
+      "Dan the Automater",
+      "Danger Mouse"
+    ],
+    "correctAnswer": "Dan the Automater",
+    "correctAnswerIndex": 2,
+    "category": "Entertainment: Music",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "6c6374fdd1f8e59cc167ace9f51dae5242000856"
+  },
+  {
+    "id": "opentdb:5490d45cf7ead772ee4bd10ad324490178bf3c9a",
+    "text": "What is the defining characteristic of someone who is described as hirsute?",
+    "choices": [
+      "Hairy",
+      "Tall",
+      "Rude",
+      "Funny"
+    ],
+    "correctAnswer": "Hairy",
+    "correctAnswerIndex": 0,
+    "category": "General Knowledge",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "5490d45cf7ead772ee4bd10ad324490178bf3c9a"
+  },
+  {
+    "id": "opentdb:7df53fff07ac3d422f38d7dca584e1e2a7668856",
+    "text": "Swedish DJ Tim Bergling, who produced songs such as &quot;Levels&quot; and &quot;Wake Me Up&quot;, is better known under what alias?",
+    "choices": [
+      "Skrillex",
+      "Avicii",
+      "deadmau5",
+      "Alesso"
+    ],
+    "correctAnswer": "Avicii",
+    "correctAnswerIndex": 1,
+    "category": "Entertainment: Music",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "7df53fff07ac3d422f38d7dca584e1e2a7668856"
+  },
+  {
+    "id": "opentdb:42194400e706702e8653ad6caa008df503177599",
+    "text": "How many players are there in an association football/soccer team?",
+    "choices": [
+      "9",
+      "8",
+      "11",
+      "10"
+    ],
+    "correctAnswer": "11",
+    "correctAnswerIndex": 2,
+    "category": "Sports",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "42194400e706702e8653ad6caa008df503177599"
+  },
+  {
+    "id": "opentdb:5a5d0f368c408a3a8981f1cb593c13690738df39",
+    "text": "Which of the following movies was not based on a novel by Stephen King? ",
+    "choices": [
+      "The Green Mile",
+      "The Thing",
+      "Carrie",
+      "Misery"
+    ],
+    "correctAnswer": "The Thing",
+    "correctAnswerIndex": 1,
+    "category": "Entertainment: Film",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "5a5d0f368c408a3a8981f1cb593c13690738df39"
+  },
+  {
+    "id": "opentdb:9025ae50b054df0e86ea72cd8b542227d6945cb1",
+    "text": "Which of the following United States Presidents served the shortest term in office?",
+    "choices": [
+      "William Henry Harrison",
+      "James A. Garfield",
+      "Warren G. Harding",
+      "Zachary Taylor"
+    ],
+    "correctAnswer": "William Henry Harrison",
+    "correctAnswerIndex": 0,
+    "category": "Politics",
+    "difficulty": "hard",
+    "source": "opentdb",
+    "contentHash": "9025ae50b054df0e86ea72cd8b542227d6945cb1"
+  },
+  {
+    "id": "opentdb:16756b59caa5fc04fbb11152fd6f247392137773",
+    "text": "How many cards are there in a standard deck of playing cards?",
+    "choices": [
+      "52",
+      "32",
+      "40",
+      "64"
+    ],
+    "correctAnswer": "52",
+    "correctAnswerIndex": 0,
+    "category": "General Knowledge",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "16756b59caa5fc04fbb11152fd6f247392137773"
+  },
+  {
+    "id": "opentdb:ca9852d50be4b7c3d91ac6ce9078f8e6d43d6067",
+    "text": "Which of the following buildings is example of a structure primarily built in the Art Deco architectural style?",
+    "choices": [
+      "Westendstrasse 1",
+      "Taipei 101",
+      "Niagara Mohawk Building",
+      "One Detroit Center"
+    ],
+    "correctAnswer": "Niagara Mohawk Building",
+    "correctAnswerIndex": 2,
+    "category": "General Knowledge",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "ca9852d50be4b7c3d91ac6ce9078f8e6d43d6067"
+  },
+  {
+    "id": "opentdb:b422f463d687675711bc4819d31e5117befd0613",
+    "text": "Which of these songs does NOT play during the Ruins segments of the 2015 game &quot;Undertale&quot;?",
+    "choices": [
+      "Anticipation",
+      "Another Medium",
+      "Unnecessary Tension",
+      "Ruins"
+    ],
+    "correctAnswer": "Another Medium",
+    "correctAnswerIndex": 1,
+    "category": "Entertainment: Video Games",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "b422f463d687675711bc4819d31e5117befd0613"
+  },
+  {
+    "id": "opentdb:152e0bb95c630219b44e91bba215857e90303573",
+    "text": "In the 2002 video game &quot;Kingdom Hearts&quot;, how many playable worlds were there?",
+    "choices": [
+      "11",
+      "13",
+      "16",
+      "14"
+    ],
+    "correctAnswer": "14",
+    "correctAnswerIndex": 3,
+    "category": "Entertainment: Video Games",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "152e0bb95c630219b44e91bba215857e90303573"
+  },
+  {
+    "id": "opentdb:82778a065c17e6de19143b4fd0c88d61e1b198c7",
+    "text": "Who was Tetris created by?",
+    "choices": [
+      "Toru Iwatani",
+      "Alexey Pajitnov",
+      "William Higinbotham",
+      "Allan Alcorn"
+    ],
+    "correctAnswer": "Alexey Pajitnov",
+    "correctAnswerIndex": 1,
+    "category": "Entertainment: Video Games",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "82778a065c17e6de19143b4fd0c88d61e1b198c7"
+  },
+  {
+    "id": "opentdb:2f0c5320672a7dd40fb3ea034b06deab1fc0a9b4",
+    "text": "During the Mongolian invasions of Japan, what were the Mongol boats mostly stopped by?",
+    "choices": [
+      "Economic depression",
+      "Typhoons",
+      "Samurai",
+      "Tornados"
+    ],
+    "correctAnswer": "Typhoons",
+    "correctAnswerIndex": 1,
+    "category": "History",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "2f0c5320672a7dd40fb3ea034b06deab1fc0a9b4"
+  },
+  {
+    "id": "opentdb:4ac35b6aa93a1e975d1c35f948505510af6ab191",
+    "text": "In &quot;Katamari Damacy&quot;, you control a character known as:",
+    "choices": [
+      "Fujio",
+      "Foomin",
+      "Ichigo ",
+      "The Prince"
+    ],
+    "correctAnswer": "The Prince",
+    "correctAnswerIndex": 3,
+    "category": "General Knowledge",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "4ac35b6aa93a1e975d1c35f948505510af6ab191"
+  },
+  {
+    "id": "opentdb:aba98b91c4dadd1151753c0be2742abeea6554c1",
+    "text": "Which famous book is sub-titled &#039;The Modern Prometheus&#039;?",
+    "choices": [
+      "The Legend of Sleepy Hollow",
+      "Frankenstein",
+      "Dracula",
+      "The Strange Case of Dr. Jekyll and Mr. Hyde "
+    ],
+    "correctAnswer": "Frankenstein",
+    "correctAnswerIndex": 1,
+    "category": "Entertainment: Books",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "aba98b91c4dadd1151753c0be2742abeea6554c1"
+  },
+  {
+    "id": "opentdb:b48dbf9f0d9a84051245bcd440fd260058bd042e",
+    "text": "What were the first two Pok&eacute;mon games released?",
+    "choices": [
+      "Red and Yellow",
+      "Green and Blue",
+      "Red and Green",
+      "Red and Blue"
+    ],
+    "correctAnswer": "Red and Green",
+    "correctAnswerIndex": 2,
+    "category": "Entertainment: Video Games",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "b48dbf9f0d9a84051245bcd440fd260058bd042e"
+  },
+  {
+    "id": "opentdb:29f0b4364d26f6cbe7d7d3b97a9064d329b21fec",
+    "text": "Which soccer team won the Copa Am&eacute;rica Centenario 2016?",
+    "choices": [
+      "Brazil",
+      "Chile",
+      "Argentina",
+      "Colombia"
+    ],
+    "correctAnswer": "Chile",
+    "correctAnswerIndex": 1,
+    "category": "Sports",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "29f0b4364d26f6cbe7d7d3b97a9064d329b21fec"
+  },
+  {
+    "id": "opentdb:9f89eb104ca8cb16f003c9792cac13bf91aed351",
+    "text": "Against which country did the Dutch Republic fight the Eighty Years&#039; War?",
+    "choices": [
+      "France",
+      "England",
+      "Portugal",
+      "Spain"
+    ],
+    "correctAnswer": "Spain",
+    "correctAnswerIndex": 3,
+    "category": "History",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "9f89eb104ca8cb16f003c9792cac13bf91aed351"
+  },
+  {
+    "id": "opentdb:b4edf1d79e9e0f769d6a4c99e982d2e6e97b95cf",
+    "text": "The word &quot;abulia&quot; means which of the following?",
+    "choices": [
+      "The inability to stand up",
+      "The inability to concentrate on anything",
+      "A feverish desire to rip one&#039;s clothes off",
+      "The inability to make decisions"
+    ],
+    "correctAnswer": "The inability to make decisions",
+    "correctAnswerIndex": 3,
+    "category": "General Knowledge",
+    "difficulty": "hard",
+    "source": "opentdb",
+    "contentHash": "b4edf1d79e9e0f769d6a4c99e982d2e6e97b95cf"
+  },
+  {
+    "id": "opentdb:a2969d88f83f1b6bc234c340924a08743355f2c1",
+    "text": "About what percentage of the Earth&#039;s surface is water? ",
+    "choices": [
+      "90%",
+      "30%",
+      "50%",
+      "70%"
+    ],
+    "correctAnswer": "70%",
+    "correctAnswerIndex": 3,
+    "category": "Science &amp; Nature",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "a2969d88f83f1b6bc234c340924a08743355f2c1"
+  },
+  {
+    "id": "opentdb:2962c548280375ffa6e9b7adbbb5917e86b64fc1",
+    "text": "In &quot;Earthbound&quot;, how does one enter &quot;Master Belch&#039;s&quot; factory?",
+    "choices": [
+      "Enter the password &quot;Master Belch Rules&quot;",
+      "Enter the password &quot;Mr Saturn Drools&quot;",
+      "Wait 3 Minutes",
+      "Enter the password &quot;Fly Honey&quot;"
+    ],
+    "correctAnswer": "Wait 3 Minutes",
+    "correctAnswerIndex": 2,
+    "category": "Entertainment: Video Games",
+    "difficulty": "hard",
+    "source": "opentdb",
+    "contentHash": "2962c548280375ffa6e9b7adbbb5917e86b64fc1"
+  },
+  {
+    "id": "opentdb:03bec6b742b2b0b856027324b42cd9bf28b6940c",
+    "text": "In the game Tom Clancy&#039;s Rainbow 6 Siege, what organization is Valkyrie from?",
+    "choices": [
+      "G.I.G.N",
+      "F.B.I",
+      "Navy Seals",
+      "S.A.S"
+    ],
+    "correctAnswer": "Navy Seals",
+    "correctAnswerIndex": 2,
+    "category": "Entertainment: Video Games",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "03bec6b742b2b0b856027324b42cd9bf28b6940c"
+  },
+  {
+    "id": "opentdb:8c70f9e15bd91820fe0ddfbff36759a4303d9d3a",
+    "text": "What does the term GPU stand for?",
+    "choices": [
+      "Graphical Proprietary Unit",
+      "Graphite Producing Unit",
+      "Gaming Processor Unit",
+      "Graphics Processing Unit"
+    ],
+    "correctAnswer": "Graphics Processing Unit",
+    "correctAnswerIndex": 3,
+    "category": "Science: Computers",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "8c70f9e15bd91820fe0ddfbff36759a4303d9d3a"
+  },
+  {
+    "id": "opentdb:f085251dc3e42ae7ef01dfb963c682b0afd1b16b",
+    "text": "Which American-owned brewery led the country in sales by volume in 2015?",
+    "choices": [
+      "Anheuser Busch",
+      "D. G. Yuengling and Son, Inc",
+      "Boston Beer Company",
+      "Miller Coors"
+    ],
+    "correctAnswer": "D. G. Yuengling and Son, Inc",
+    "correctAnswerIndex": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "f085251dc3e42ae7ef01dfb963c682b0afd1b16b"
+  },
+  {
+    "id": "opentdb:7f759464277f2b55dd57d41b941d84a1add3a0ad",
+    "text": "Where was Nicki Minaj born?",
+    "choices": [
+      "Grenada",
+      "Saint Lucia",
+      "Haiti",
+      "Trinidad and Tobago"
+    ],
+    "correctAnswer": "Trinidad and Tobago",
+    "correctAnswerIndex": 3,
+    "category": "Entertainment: Music",
+    "difficulty": "hard",
+    "source": "opentdb",
+    "contentHash": "7f759464277f2b55dd57d41b941d84a1add3a0ad"
+  },
+  {
+    "id": "opentdb:a956f2b631f04c00e527fa3e977fdef1b6c4e079",
+    "text": "In which city did American rap producer DJ Khaled originate from?",
+    "choices": [
+      "Atlanta",
+      "Detroit",
+      "Miami",
+      "New York"
+    ],
+    "correctAnswer": "Miami",
+    "correctAnswerIndex": 2,
+    "category": "Entertainment: Music",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "a956f2b631f04c00e527fa3e977fdef1b6c4e079"
+  },
+  {
+    "id": "opentdb:e748e900a25e5c91cfd579279e62e841b7d0d279",
+    "text": "Which Canadian reggae musician had a 1993 hit with the song &#039;Informer&#039;?",
+    "choices": [
+      "Hail",
+      "Sleet",
+      "Rain",
+      "Snow"
+    ],
+    "correctAnswer": "Snow",
+    "correctAnswerIndex": 3,
+    "category": "Entertainment: Music",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "e748e900a25e5c91cfd579279e62e841b7d0d279"
+  },
+  {
+    "id": "opentdb:a53a0b304ca2daa4a665f0582ccb8a0e4a5cf263",
+    "text": "When someone is cowardly, they are said to have what color belly?",
+    "choices": [
+      "Blue",
+      "Yellow",
+      "Red",
+      "Green"
+    ],
+    "correctAnswer": "Yellow",
+    "correctAnswerIndex": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "a53a0b304ca2daa4a665f0582ccb8a0e4a5cf263"
+  },
+  {
+    "id": "opentdb:ae17a441a91f98a4676d1719c8752ddea20de3af",
+    "text": "Who was world chess champion between 1894 and 1921",
+    "choices": [
+      "Jos&eacute; Ra&uacute;l Capablanca",
+      "Emanuel Lasker",
+      "Bobby Fischer",
+      "Wilhelm Steinitz"
+    ],
+    "correctAnswer": "Emanuel Lasker",
+    "correctAnswerIndex": 1,
+    "category": "Entertainment: Board Games",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "ae17a441a91f98a4676d1719c8752ddea20de3af"
+  },
+  {
+    "id": "opentdb:75d0fafbd9d5e0c5f081d866880fdc13cf989003",
+    "text": "Which of the following nations was NOT a belligerent in World War I?",
+    "choices": [
+      "Portugal",
+      "Denmark",
+      "Romania",
+      "Greece"
+    ],
+    "correctAnswer": "Denmark",
+    "correctAnswerIndex": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "75d0fafbd9d5e0c5f081d866880fdc13cf989003"
+  },
+  {
+    "id": "opentdb:ff871424a6b2fc4092fc6dfeecc0bbe683c9ed2f",
+    "text": "What does TIE stand for in reference to the TIE Fighter in &quot;Star Wars&quot;?",
+    "choices": [
+      "Twin Inception Engine",
+      "Twin Intercepter Engine",
+      "Twin Ion Engine",
+      "Twin Iron Engine"
+    ],
+    "correctAnswer": "Twin Ion Engine",
+    "correctAnswerIndex": 2,
+    "category": "Entertainment: Film",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "ff871424a6b2fc4092fc6dfeecc0bbe683c9ed2f"
+  },
+  {
+    "id": "opentdb:31dc44e024f6e61a3bf81ec70f9f5151d5c468e4",
+    "text": "In the Mario Kart series, which game introduced the &quot;Shield Drifting&quot; mechanic?",
+    "choices": [
+      "Mario Kart: Double Dash",
+      "Mario Kart Super Circuit",
+      "Mario Kart DS",
+      "Mario Kart Arcade GP DX"
+    ],
+    "correctAnswer": "Mario Kart Arcade GP DX",
+    "correctAnswerIndex": 3,
+    "category": "Entertainment: Video Games",
+    "difficulty": "hard",
+    "source": "opentdb",
+    "contentHash": "31dc44e024f6e61a3bf81ec70f9f5151d5c468e4"
+  },
+  {
+    "id": "opentdb:3f3903d477491240597089e31e53f91e20f90070",
+    "text": "How many French Open&#039;s did Bj&ouml;rn Borg win?",
+    "choices": [
+      "6",
+      "9",
+      "2",
+      "4"
+    ],
+    "correctAnswer": "6",
+    "correctAnswerIndex": 0,
+    "category": "Sports",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "3f3903d477491240597089e31e53f91e20f90070"
+  },
+  {
+    "id": "opentdb:54a4fe2e176739aead9ba9d8ab79442bee50f994",
+    "text": "Which game in the &quot;Dark Souls&quot; series does the player play as the &quot;Ashen One&quot;?",
+    "choices": [
+      "Dark Souls III",
+      "Demon Souls",
+      "Dark Souls I",
+      "Bloodborne"
+    ],
+    "correctAnswer": "Dark Souls III",
+    "correctAnswerIndex": 0,
+    "category": "Entertainment: Video Games",
+    "difficulty": "hard",
+    "source": "opentdb",
+    "contentHash": "54a4fe2e176739aead9ba9d8ab79442bee50f994"
+  },
+  {
+    "id": "opentdb:76e21ff7d2418a713e570281037d058dfe6444bb",
+    "text": "The main protagonist of the fourth part of JoJo&#039;s Bizarre Adventure is which of the following?",
+    "choices": [
+      "Koichi Hirose",
+      "Yoshikage kira",
+      "Josuke Higashikata",
+      "Joey JoJo"
+    ],
+    "correctAnswer": "Josuke Higashikata",
+    "correctAnswerIndex": 2,
+    "category": "Entertainment: Japanese Anime &amp; Manga",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "76e21ff7d2418a713e570281037d058dfe6444bb"
+  },
+  {
+    "id": "opentdb:8351bd9152b237b618a334a2aaea3e64d41be705",
+    "text": "What is the first book of the Old Testament?",
+    "choices": [
+      "Exodus",
+      "Genesis",
+      "Numbers",
+      "Leviticus"
+    ],
+    "correctAnswer": "Genesis",
+    "correctAnswerIndex": 1,
+    "category": "General Knowledge",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "8351bd9152b237b618a334a2aaea3e64d41be705"
+  },
+  {
+    "id": "opentdb:0eb1ce6f4797577ac72297df5c475b5fadd38bef",
+    "text": "In &quot;Fallout 4&quot;, what is the name of the dog you find at Red Rocket truck stop?",
+    "choices": [
+      "Chop",
+      "Quazar",
+      "Dogmeat",
+      "Sparky"
+    ],
+    "correctAnswer": "Dogmeat",
+    "correctAnswerIndex": 2,
+    "category": "Entertainment: Video Games",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "0eb1ce6f4797577ac72297df5c475b5fadd38bef"
+  },
+  {
+    "id": "opentdb:7249d378a5a1810db48d9d665fc40e743a3f2f1e",
+    "text": "Which modern day country is the region that was known as Phrygia in ancient times?",
+    "choices": [
+      "Syria",
+      "Egypt",
+      "Greece",
+      "Turkey"
+    ],
+    "correctAnswer": "Turkey",
+    "correctAnswerIndex": 3,
+    "category": "History",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "7249d378a5a1810db48d9d665fc40e743a3f2f1e"
+  },
+  {
+    "id": "opentdb:0e0e59ffcf2d64faf2ce3d6b5cfad62964df2435",
+    "text": "The success of DC Comics&#039; Swamp Thing, Sandman, and other books in a similar style, led to the creation of what new imprint in 1993?",
+    "choices": [
+      "Impact",
+      "Vertigo",
+      "New Universe",
+      "Red Circle"
+    ],
+    "correctAnswer": "Vertigo",
+    "correctAnswerIndex": 1,
+    "category": "Entertainment: Comics",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "0e0e59ffcf2d64faf2ce3d6b5cfad62964df2435"
+  },
+  {
+    "id": "opentdb:d64d06204a871651c1341ffeed41be5f0c92daa7",
+    "text": "The film Mad Max: Fury Road features the Dies Irae  from which composer&#039;s requiem?",
+    "choices": [
+      "Verdi",
+      "Berlioz",
+      "Mozart",
+      "Brahms"
+    ],
+    "correctAnswer": "Verdi",
+    "correctAnswerIndex": 0,
+    "category": "Entertainment: Film",
+    "difficulty": "hard",
+    "source": "opentdb",
+    "contentHash": "d64d06204a871651c1341ffeed41be5f0c92daa7"
+  },
+  {
+    "id": "opentdb:187c36262ece0a299105d2d04d1b9a97c8de0042",
+    "text": "Josh Mansour is part of what NRL team?",
+    "choices": [
+      "North Queensland Cowboys",
+      "Melbourne Storm",
+      "Penrith Panthers",
+      "Sydney Roosters"
+    ],
+    "correctAnswer": "Penrith Panthers",
+    "correctAnswerIndex": 2,
+    "category": "Sports",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "187c36262ece0a299105d2d04d1b9a97c8de0042"
+  },
+  {
+    "id": "opentdb:8c4f26d8fc6f94860dbbef8cb97b9d695ba005d2",
+    "text": "What was the third country to have a McDonald&#039;s restaurant?",
+    "choices": [
+      "France",
+      "Australia",
+      "Costa Rica",
+      "Japan"
+    ],
+    "correctAnswer": "Costa Rica",
+    "correctAnswerIndex": 2,
+    "category": "General Knowledge",
+    "difficulty": "hard",
+    "source": "opentdb",
+    "contentHash": "8c4f26d8fc6f94860dbbef8cb97b9d695ba005d2"
+  },
+  {
+    "id": "opentdb:a6e8519ed30ebc581011368108f1bef9a0bd5d60",
+    "text": "In Super Mario RPG: Legend of The Seven Stars, what is Geno&#039;s real name?",
+    "choices": [
+      "Smithy",
+      "Geno",
+      "♡♪!?",
+      "Exor"
+    ],
+    "correctAnswer": "♡♪!?",
+    "correctAnswerIndex": 2,
+    "category": "Entertainment: Video Games",
+    "difficulty": "hard",
+    "source": "opentdb",
+    "contentHash": "a6e8519ed30ebc581011368108f1bef9a0bd5d60"
+  },
+  {
+    "id": "opentdb:7d10a1ab67057c7e5d33b9c70c45622f4cc58e4f",
+    "text": "Who is the main character of the game Half-Life: Opposing Force?",
+    "choices": [
+      "Adrian Shephard",
+      "Gordon Freeman",
+      "Barney Calhoun",
+      "Alyx Vance"
+    ],
+    "correctAnswer": "Adrian Shephard",
+    "correctAnswerIndex": 0,
+    "category": "Entertainment: Video Games",
+    "difficulty": "easy",
+    "source": "opentdb",
+    "contentHash": "7d10a1ab67057c7e5d33b9c70c45622f4cc58e4f"
+  },
+  {
+    "id": "opentdb:b82129d089e6736ec4808ce70927db3c903a33f2",
+    "text": "&quot;Banjo-Kazooie&quot; originally started its development as a totally different game for the SNES under which codename?",
+    "choices": [
+      "Project Land",
+      "Project Ukulele",
+      "Project Dream",
+      "Project BK"
+    ],
+    "correctAnswer": "Project Dream",
+    "correctAnswerIndex": 2,
+    "category": "Entertainment: Video Games",
+    "difficulty": "hard",
+    "source": "opentdb",
+    "contentHash": "b82129d089e6736ec4808ce70927db3c903a33f2"
+  },
+  {
+    "id": "opentdb:ad84c6e5e42f8fb17ea7905bffe70423afd331f2",
+    "text": "In the anime Assassination Classroom what is the class that Korosensei teaches?",
+    "choices": [
+      "Class 3-E",
+      "Class 3-D",
+      "Class 3-A",
+      "Class 3-B"
+    ],
+    "correctAnswer": "Class 3-E",
+    "correctAnswerIndex": 0,
+    "category": "Entertainment: Japanese Anime &amp; Manga",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "ad84c6e5e42f8fb17ea7905bffe70423afd331f2"
+  },
+  {
+    "id": "opentdb:3e608f80dbb7e95bd6bbbb108b2f0d5e2db03d22",
+    "text": "On what day did Germany invade Poland?",
+    "choices": [
+      "July 7, 1937",
+      "December 7, 1941",
+      "June 22, 1941",
+      "September 1, 1939"
+    ],
+    "correctAnswer": "September 1, 1939",
+    "correctAnswerIndex": 3,
+    "category": "History",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "3e608f80dbb7e95bd6bbbb108b2f0d5e2db03d22"
+  },
+  {
+    "id": "opentdb:c7332ac25b8ef70f2eefb14ab30bd51beb5fff87",
+    "text": "Which of the following films was NOT directed by Hayao Miyazaki?",
+    "choices": [
+      "Wolf Children",
+      "Kiki&#039;s Delivery Service",
+      "Spirited Away",
+      "Princess Mononoke"
+    ],
+    "correctAnswer": "Wolf Children",
+    "correctAnswerIndex": 0,
+    "category": "Entertainment: Japanese Anime &amp; Manga",
+    "difficulty": "medium",
+    "source": "opentdb",
+    "contentHash": "c7332ac25b8ef70f2eefb14ab30bd51beb5fff87"
   }
 ]

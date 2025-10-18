@@ -51,6 +51,8 @@ export function createApiClient({ getAuthHeaders } = {}) {
       signal,
     };
 
+    init.credentials = options.credentials ?? "include";
+
     const authHeaders = typeof getAuthHeaders === "function" ? getAuthHeaders() ?? {} : {};
     for (const [key, value] of Object.entries(authHeaders)) {
       if (value !== undefined && value !== null && value !== "") {

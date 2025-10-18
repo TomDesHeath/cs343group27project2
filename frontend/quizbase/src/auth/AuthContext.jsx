@@ -1,204 +1,384 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createApiClient } from "../lib/apiClient.js";
+
+const STORAGE_KEY = "auth";
 
 const Ctx = createContext(null);
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(Ctx);
 
-const DEFAULT_ROLE = "player";
-
-const nowIso = () => new Date().toISOString();
-
-const deriveRoleFromEmail = (email) => {
-  if (!email) {
-    return DEFAULT_ROLE;
-  }
-  const normalised = email.trim().toLowerCase();
-  if (normalised.startsWith("admin@") || normalised.endsWith("@quizbase.admin")) {
-    return "admin";
-  }
-  return DEFAULT_ROLE;
-};
-
-const deriveUserId = (input) => {
-  const source =
-    (typeof input === "string" && input) ||
-    input?.id ||
-    input?.email ||
-    input?.username;
-  if (!source) {
-    return "demo-user";
-  }
-  const trimmed = source.trim().toLowerCase();
-  if (!trimmed) {
-    return "demo-user";
-  }
-  return trimmed.replace(/[^a-z0-9]+/g, "-");
-};
-
-const MERGE_KEYS = ["id", "username", "avatarUrl", "email", "role", "createdAt"];
-
-const ensureUserShape = (maybeUser) => {
+const normaliseUser = (maybeUser) => {
   if (!maybeUser) {
     return null;
   }
-  const id = maybeUser.id ?? deriveUserId(maybeUser);
-  const email = maybeUser.email ?? `${id}@quizbase.local`;
+  const id = maybeUser.id ?? maybeUser.userId ?? maybeUser.email ?? null;
+  if (!id) {
+    return null;
+  }
   return {
     id,
-    username: maybeUser.username ?? "player1",
+    username: maybeUser.username ?? "",
+    email: maybeUser.email ?? "",
     avatarUrl: maybeUser.avatarUrl ?? "",
-    email,
-    role: maybeUser.role ?? deriveRoleFromEmail(email),
-    createdAt: maybeUser.createdAt ?? nowIso(),
+    role: (maybeUser.role ?? "user").toString().toLowerCase(),
+    createdAt: maybeUser.createdAt ?? maybeUser.created_at ?? null,
+    updatedAt: maybeUser.updatedAt ?? maybeUser.updated_at ?? null,
   };
 };
 
-const mergeUserData = (current, incoming) => {
-  const shaped = ensureUserShape({ ...current, ...incoming });
-  if (!shaped) {
-    return current ?? null;
+const normaliseEmailInput = (value) => {
+  if (typeof value !== "string") {
+    return "";
   }
-  if (!current) {
-    return shaped;
+  return value.trim().toLowerCase();
+};
+
+const extractValidationErrorMessage = (error, fallbackMessage) => {
+  const issues = error?.payload?.errors;
+  if (Array.isArray(issues) && issues.length > 0) {
+    const uniqueMessages = Array.from(new Set(issues.map((issue) => issue.message)));
+    return uniqueMessages.join(", ");
   }
-  const hasChanged = MERGE_KEYS.some((key) => current[key] !== shaped[key]);
-  return hasChanged ? shaped : current;
+  return error?.message ?? fallbackMessage;
+};
+
+const readStoredAuth = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const localRaw = window.localStorage.getItem(STORAGE_KEY);
+  if (localRaw) {
+    try {
+      const parsed = JSON.parse(localRaw);
+      return { ...parsed, remember: true };
+    } catch (error) {
+      console.warn("Failed to parse persisted auth payload", error);
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  }
+
+  const sessionRaw = window.sessionStorage.getItem(STORAGE_KEY);
+  if (sessionRaw) {
+    try {
+      const parsed = JSON.parse(sessionRaw);
+      return { ...parsed, remember: false };
+    } catch (error) {
+      console.warn("Failed to parse session auth payload", error);
+      window.sessionStorage.removeItem(STORAGE_KEY);
+    }
+  }
+
+  return null;
+};
+
+const persistAuth = (payload, remember) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const body = JSON.stringify({ ...payload, remember });
+  const target = remember ? window.localStorage : window.sessionStorage;
+  const other = remember ? window.sessionStorage : window.localStorage;
+  target.setItem(STORAGE_KEY, body);
+  other.removeItem(STORAGE_KEY);
+};
+
+const clearPersistedAuth = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.removeItem(STORAGE_KEY);
+  window.sessionStorage.removeItem(STORAGE_KEY);
 };
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [access, setAccess] = useState(null);
-  const [refresh, setRefresh] = useState(null);
+  const [userState, setUserState] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const rememberRef = useRef(true);
 
-  const persistAuth = (payload, rememberMe) => {
-    if (typeof window === "undefined") {
-      return;
+  const setAuthState = (nextUser, token, remember = rememberRef.current) => {
+    const normalisedUser = normaliseUser(nextUser);
+    rememberRef.current = remember ?? rememberRef.current;
+    setUserState(normalisedUser);
+    setAccessToken(token ?? null);
+    if (normalisedUser && token) {
+      persistAuth({ user: normalisedUser, accessToken: token }, rememberRef.current);
+    } else {
+      clearPersistedAuth();
     }
-    const targetStore = rememberMe ? window.localStorage : window.sessionStorage;
-    const otherStore = rememberMe ? window.sessionStorage : window.localStorage;
-    targetStore.setItem("auth", JSON.stringify(payload));
-    otherStore.removeItem("auth");
   };
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      setLoading(false);
-      return;
-    }
-    const stored = window.localStorage.getItem("auth") ?? window.sessionStorage.getItem("auth");
-    if (!stored) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const saved = JSON.parse(stored);
-      if (saved?.access) {
-        setAccess(saved.access);
-        setRefresh(saved.refresh ?? null);
-        const hydratedUser = ensureUserShape(saved.user);
-        if (hydratedUser) {
-          setUser(hydratedUser);
-        }
-      }
-    } catch (error) {
-      console.warn("Failed to parse stored auth payload", error);
-      window.localStorage.removeItem("auth");
-      window.sessionStorage.removeItem("auth");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const clearAuthState = () => {
+    setUserState(null);
+    setAccessToken(null);
+    rememberRef.current = true;
+    clearPersistedAuth();
+  };
 
-  useEffect(() => {
-    if (!user?.id) {
-      return;
-    }
-    let cancelled = false;
-    const client = createApiClient({
+  const buildAuthClient = () =>
+    createApiClient({
       getAuthHeaders: () => {
-        const headers = {
-          "x-user-id": user.id,
-        };
-        if (access) {
-          headers.Authorization = `Bearer ${access}`;
+        const headers = {};
+        if (accessToken) {
+          headers.Authorization = `Bearer ${accessToken}`;
+        }
+        if (userState?.id) {
+          headers["x-user-id"] = userState.id;
         }
         return headers;
       },
     });
-    (async () => {
-      try {
-        const profile = await client.get("/users/me");
-        if (!profile || cancelled) {
-          return;
-        }
-        setUser((previous) => mergeUserData(previous, profile));
-      } catch (error) {
-        console.warn("Failed to hydrate user profile", error);
+
+  const refreshAccessToken = async () => {
+    try {
+      const client = createApiClient();
+      const response = await client.post("/auth/refresh", {});
+      const newToken =
+        response?.data?.accessToken ?? response?.accessToken ?? null;
+      if (!newToken) {
+        return null;
       }
-    })();
-    return () => {
-      cancelled = true;
+      setAccessToken(newToken);
+      if (userState) {
+        persistAuth({ user: userState, accessToken: newToken }, rememberRef.current);
+      }
+      return newToken;
+    } catch (error) {
+      console.warn("Failed to refresh access token", error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const hydrate = async () => {
+      if (typeof window === "undefined") {
+        setLoading(false);
+        return;
+      }
+
+      const stored = readStoredAuth();
+      if (!stored?.accessToken) {
+        clearPersistedAuth();
+        setLoading(false);
+        return;
+      }
+
+      rememberRef.current = stored.remember ?? true;
+      const storedUser = normaliseUser(stored.user);
+      if (storedUser) {
+        setUserState(storedUser);
+      }
+      setAccessToken(stored.accessToken);
+
+      try {
+        const client = createApiClient({
+          getAuthHeaders: () => ({
+            Authorization: `Bearer ${stored.accessToken}`,
+          }),
+        });
+        const profile = await client.get("/auth/me");
+        const fetchedUser = normaliseUser(profile?.data?.user ?? profile?.user);
+        if (fetchedUser) {
+          setAuthState(fetchedUser, stored.accessToken, rememberRef.current);
+        }
+      } catch (error) {
+        console.warn("Failed to hydrate profile with stored token", error);
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          try {
+            const client = createApiClient({
+              getAuthHeaders: () => ({
+                Authorization: `Bearer ${newToken}`,
+              }),
+            });
+            const profile = await client.get("/auth/me");
+            const fetchedUser = normaliseUser(profile?.data?.user ?? profile?.user);
+            if (fetchedUser) {
+              setAuthState(fetchedUser, newToken, rememberRef.current);
+            } else {
+              clearAuthState();
+            }
+          } catch (profileError) {
+            console.warn("Failed to fetch profile after refresh", profileError);
+            clearAuthState();
+          }
+        } else {
+          clearAuthState();
+        }
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [access, user?.id]);
 
-  const login = async (email, _password, rememberMe = true) => {
-    const baseUser = ensureUserShape({
-      id: deriveUserId(email),
-      username: email?.split("@")[0] || "player",
-      avatarUrl: "",
-      email,
-      role: deriveRoleFromEmail(email),
-      createdAt: nowIso(),
-    });
-    const payload = { access: "tok", refresh: "reftok", user: baseUser };
-    setUser(baseUser);
-    setAccess(payload.access);
-    setRefresh(payload.refresh);
-    persistAuth(payload, rememberMe);
-    return payload;
-  };
+    hydrate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const register = async ({ username, email, password, avatarUrl }) => {
-    const payload = await login(email, password, true);
-    const enrichedUser = ensureUserShape({
-      id: deriveUserId(email),
-      username,
-      avatarUrl,
-      email,
-      role: deriveRoleFromEmail(email),
-      createdAt: payload.user?.createdAt,
-    });
-    if (enrichedUser) {
-      setUser(enrichedUser);
-      persistAuth({ ...payload, user: enrichedUser }, true);
+  const login = async (email, password, rememberMe = true) => {
+    const trimmedEmail = normaliseEmailInput(email);
+    const rawPassword = typeof password === "string" ? password : "";
+    if (!trimmedEmail) {
+      throw new Error("Email is required");
+    }
+    if (!rawPassword) {
+      throw new Error("Password is required");
+    }
+    try {
+      const client = createApiClient();
+      const response = await client.post("/auth/login", {
+        email: trimmedEmail,
+        password: rawPassword,
+      });
+      if (response?.success === false) {
+        throw new Error(response?.error ?? "Failed to login");
+      }
+      const data = response?.data ?? response;
+      const access = data?.accessToken;
+      const userPayload = data?.user;
+      if (!access || !userPayload) {
+        throw new Error("Invalid login response");
+      }
+      const normalisedUser = normaliseUser(userPayload);
+      setAuthState(normalisedUser, access, rememberMe);
+      return { user: normalisedUser, accessToken: access };
+    } catch (error) {
+      throw new Error(extractValidationErrorMessage(error, "Failed to login"));
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setAccess(null);
-    setRefresh(null);
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem("auth");
-      window.sessionStorage.removeItem("auth");
+  const register = async ({ username, email, password, avatarUrl }, rememberMe = true) => {
+    const trimmedUsername = typeof username === "string" ? username.trim() : "";
+    const trimmedEmail = normaliseEmailInput(email);
+    const rawPassword = typeof password === "string" ? password : "";
+    const cleanedAvatarUrl =
+      typeof avatarUrl === "string" && avatarUrl.trim().length > 0
+        ? avatarUrl.trim()
+        : undefined;
+    try {
+      const client = createApiClient();
+      const response = await client.post("/auth/register", {
+        username: trimmedUsername,
+        email: trimmedEmail,
+        password: rawPassword,
+        avatarUrl: cleanedAvatarUrl,
+      });
+      if (response?.success === false) {
+        throw new Error(response?.error ?? "Failed to register");
+      }
+      const data = response?.data ?? response;
+      const access = data?.accessToken;
+      const userPayload = data?.user;
+      if (!access || !userPayload) {
+        throw new Error("Invalid registration response");
+      }
+      const normalisedUser = normaliseUser(userPayload);
+      setAuthState(normalisedUser, access, rememberMe);
+      return { user: normalisedUser, accessToken: access };
+    } catch (error) {
+      throw new Error(extractValidationErrorMessage(error, "Failed to register"));
     }
   };
 
-  const isAdmin = user?.role === "admin";
-
-  const value = {
-    user,
-    access,
-    refresh,
-    loading,
-    login,
-    register,
-    logout,
-    setUser,
-    isAdmin,
+  const logout = async () => {
+    try {
+      if (accessToken) {
+        const client = buildAuthClient();
+        await client.post("/auth/logout", {});
+      }
+    } catch (error) {
+      console.warn("Logout request failed", error);
+    } finally {
+      clearAuthState();
+    }
   };
+
+  const updateProfile = async (updates = {}) => {
+    const client = buildAuthClient();
+    const response = await client.patch("/auth/profile", updates);
+    if (response?.success === false) {
+      throw new Error(response?.error ?? "Failed to update profile");
+    }
+    const updatedUser = normaliseUser(response?.data?.user ?? response?.user);
+    if (updatedUser) {
+      setAuthState(updatedUser, accessToken, rememberRef.current);
+    }
+    return updatedUser;
+  };
+
+  const changePassword = async ({ currentPassword, newPassword }) => {
+    const client = buildAuthClient();
+    const response = await client.post("/auth/change-password", {
+      currentPassword,
+      newPassword,
+    });
+    if (response?.success === false) {
+      throw new Error(response?.error ?? "Failed to change password");
+    }
+    clearAuthState();
+    return response?.message ?? "Password changed successfully. Please log in again.";
+  };
+
+  const deleteAccount = async () => {
+    const client = buildAuthClient();
+    await client.delete("/users/me");
+    clearAuthState();
+  };
+
+  const refreshUser = async () => {
+    const client = buildAuthClient();
+    const response = await client.get("/auth/me");
+    if (response?.success === false) {
+      throw new Error(response?.error ?? "Failed to load profile");
+    }
+    const fetchedUser = normaliseUser(response?.data?.user ?? response?.user);
+    if (fetchedUser) {
+      setAuthState(fetchedUser, accessToken, rememberRef.current);
+    }
+    return fetchedUser;
+  };
+
+  const setUserWithPersist = (updater) => {
+    setUserState((previous) => {
+      const next =
+        typeof updater === "function" ? updater(previous) : updater;
+      const normalised = normaliseUser(next);
+      if (normalised && accessToken) {
+        persistAuth({ user: normalised, accessToken }, rememberRef.current);
+      }
+      if (!normalised) {
+        clearPersistedAuth();
+      }
+      return normalised;
+    });
+  };
+
+  const value = useMemo(
+    () => ({
+      user: userState,
+      access: accessToken,
+      accessToken,
+      loading,
+      login,
+      register,
+      logout,
+      updateProfile,
+      changePassword,
+      deleteAccount,
+      refreshUser,
+      setUser: setUserWithPersist,
+      setAccessToken,
+      isAdmin: userState?.role === "admin",
+    }),
+    [userState, accessToken, loading]
+  );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -1,0 +1,5 @@
+To launch progrma run:
+
+chmod +x scripts/launch.sh
+./scripts/launch.sh
+

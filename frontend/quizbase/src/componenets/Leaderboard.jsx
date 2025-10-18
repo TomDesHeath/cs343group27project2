@@ -2,14 +2,6 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useApiClient from "../hooks/useApiClient.js";
 
-const FALLBACK_ENTRIES = [
-  { name: "Sasha", score: 1820, streak: 7 },
-  { name: "Kai", score: 1745, streak: 5 },
-  { name: "Morgan", score: 1690, streak: 6 },
-  { name: "Jordan", score: 1635, streak: 4 },
-  { name: "Reese", score: 1580, streak: 3 },
-];
-
 const aggregateLeaderboard = (matches) => {
   if (!Array.isArray(matches) || matches.length === 0) {
     return [];
@@ -45,6 +37,7 @@ export default function Leaderboard({ entries, title = "Leaderboard" }) {
     queryFn: () => client.get("/matches"),
     enabled: shouldFetch,
     staleTime: 30_000,
+    refetchInterval: 5000,
   });
 
   const derivedEntries = useMemo(() => {
@@ -52,10 +45,7 @@ export default function Leaderboard({ entries, title = "Leaderboard" }) {
       return entries;
     }
     const aggregated = aggregateLeaderboard(data);
-    if (aggregated.length > 0) {
-      return aggregated;
-    }
-    return FALLBACK_ENTRIES;
+    return aggregated;
   }, [entries, data]);
 
   if (shouldFetch && isLoading) {
@@ -99,7 +89,7 @@ export default function Leaderboard({ entries, title = "Leaderboard" }) {
     );
   }
 
-  const items = derivedEntries ?? FALLBACK_ENTRIES;
+  const items = derivedEntries ?? [];
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-12 pt-12">
@@ -107,28 +97,32 @@ export default function Leaderboard({ entries, title = "Leaderboard" }) {
       <header className="border-b border-border px-4 py-3">
         <h2 className="text-base font-semibold text-content">{title}</h2>
       </header>
-      <ul className="divide-y divide-border/60">
-        {items.map((entry, index) => (
-          <li key={entry.name} className="flex items-center justify-between px-4 py-3 text-sm text-content">
-            <span className="flex items-center gap-3">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-50 text-xs font-medium text-brand-600">
-                {index + 1}
+      {items.length === 0 ? (
+        <div className="px-4 py-6 text-sm text-content-muted">No players exist yet.</div>
+      ) : (
+        <ul className="divide-y divide-border/60">
+          {items.map((entry, index) => (
+            <li key={entry.name} className="flex items-center justify-between px-4 py-3 text-sm text-content">
+              <span className="flex items-center gap-3">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-50 text-xs font-medium text-brand-600">
+                  {index + 1}
+                </span>
+                <span className="font-medium">{entry.name}</span>
               </span>
-              <span className="font-medium">{entry.name}</span>
-            </span>
-            <span className="flex items-center gap-6 text-content-muted">
-              <span className="flex flex-col items-end">
-                <span className="text-xs uppercase tracking-wide text-content-subtle">Score</span>
-                <span className="font-semibold text-content">{entry.score}</span>
+              <span className="flex items-center gap-6 text-content-muted">
+                <span className="flex flex-col items-end">
+                  <span className="text-xs uppercase tracking-wide text-content-subtle">Score</span>
+                  <span className="font-semibold text-content">{entry.score}</span>
+                </span>
+                <span className="flex flex-col items-end">
+                  <span className="text-xs uppercase tracking-wide text-content-subtle">Streak</span>
+                  <span className="font-semibold text-content">{entry.streak ?? "—"}</span>
+                </span>
               </span>
-              <span className="flex flex-col items-end">
-                <span className="text-xs uppercase tracking-wide text-content-subtle">Streak</span>
-                <span className="font-semibold text-content">{entry.streak ?? "—"}</span>
-              </span>
-            </span>
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
     </div>
   );

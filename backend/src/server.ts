@@ -1,13 +1,14 @@
 /**
- * Entry point for the backend server.
- * - Wraps the Express app in a native HTTP server.
- * - Initializes WebSocket handling (via initSockets).
- * - Listens on the configured PORT (defaults to 4000).
- * - Logs a message when the server is up and running.
+ * Main entry point for the backend server.
+ *
+ * This file creates and starts the HTTP server that powers the backend.
+ * It loads environment variables, sets up the Express app, and attaches
+ * Socket.IO for real-time communication.
+ *
+ * Once running, the server listens on the configured port (default: 4000)
+ * and logs both the backend port and the expected frontend URL.
  */
 
-import fs from "fs";
-import path from "path";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -17,28 +18,16 @@ import { app } from "./app";
 // Ensure env is loaded (for PORT, etc.)
 dotenv.config();
 const httpServer = createServer(app);
-const io = new Server(httpServer, { cors: { origin: "*" }, serveClient: true });
+const io = new Server(httpServer, { cors: { origin: "*" }, serveClient: false });
 
 initSockets(io);
 
-// categories route for tester.html
-app.get("/categories", (_req, res) => {
-  try {
-    const p = path.join(__dirname, "..", "questions.json");
-    const raw = fs.readFileSync(p, "utf-8");
-    const arr = JSON.parse(raw) as Array<{ category?: string }>;
-    const set = new Set<string>();
-    for (const q of arr) {
-      if (q.category && q.category.trim()) set.add(q.category.trim());
-    }
-    const categories = Array.from(set).sort();
-    res.json({ categories });
-  } catch (e) {
-    res.status(500).json({ error: "Failed to read categories" });
-  }
-});
-
 const PORT = Number(process.env.PORT || 4000);
+const FRONTEND_URL =
+  process.env.FRONTEND_URL || process.env.CORS_ORIGIN || "http://localhost:5173";
+
 httpServer.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  // Avoid printing a clickable backend URL to reduce confusion
+  console.log(`API server listening on port ${PORT} (backend)`);
+  console.log(`Open the app at ${FRONTEND_URL}`);
 });

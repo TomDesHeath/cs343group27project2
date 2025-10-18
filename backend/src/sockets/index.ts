@@ -1,6 +1,28 @@
+/**
+ * Real-Time Match Engine (Socket.IO)
+ * ----------------------------------
+ * This module wires up all realtime game behavior for the trivia app:
+ * - Manages in-memory match state (players, host, stage, timers).
+ * - Loads questions from DB (via Prisma) with a JSON fallback.
+ * - Sets up the game loop: lobby → questions → scoring → end.
+ * - Emits presence, timer ticks, score updates, and reveal events.
+ * - Supports scheduled starts, host cancel, and late join/ready sync.
+ *
+ * Key concepts:
+ * - MatchState: in-memory snapshot per match room (match:<id>).
+ * - Required responders: only ready players are required to answer.
+ * - Scoring: fastest-answer bonus via response-time-based awards.
+ * - Timers: per-question hard timeout + 1s tick broadcast.
+ *
+ * Security note:
+ * - Assumes a trusted socket identity for host/user (no JWT here).
+ *   Add auth/room authorization at the gateway layer in production.
+ */
+
 import { Server, Socket } from "socket.io";
 import fs from "fs";
 import path from "path";
+import { prisma } from "../config/database";
 
 type Question = {
   id: string;
@@ -399,7 +421,38 @@ function showQuestion(io: Server, match: MatchState) {
 }
 
 export function initSockets(io: Server) {
-  const allQuestions = loadQuestions();
+  let allQuestions = loadQuestions();
+  // Prefer DB at runtime; fall back to JSON file if DB not ready
+  prisma.question
+    .findMany({ include: { answers: true, category: true } })
+    .then((rows) => {
+      const mapped = rows
+        .map((q) => {
+          const answers = [...q.answers].sort((a, b) => a.id.localeCompare(b.id));
+          const choices = answers.map((a) => a.text);
+          const correctIndex = answers.findIndex((a) => a.isCorrect);
+          return {
+            id: q.id,
+            text: q.text,
+            choices,
+            correctAnswer: correctIndex >= 0 ? answers[correctIndex].text : "",
+            correctAnswerIndex: Math.max(0, correctIndex),
+            category: q.category?.name,
+            difficulty: (q as any).difficulty?.toString?.().toLowerCase?.(),
+            source: q.source || undefined,
+          } as Question;
+        })
+        .filter((q) => q.choices.length >= 2);
+      if (mapped.length > 0) {
+        allQuestions = mapped;
+        console.log(`Loaded ${allQuestions.length} questions from DB`);
+      } else {
+        console.warn("No questions found in DB; using questions.json fallback");
+      }
+    })
+    .catch((err) => {
+      console.error("DB question load failed; using questions.json", err);
+    });
 
   io.on("connection", (socket: Socket) => {
     // join match

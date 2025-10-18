@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import useApiClient from "../hooks/useApiClient.js";
 import { useAuth } from "../auth/AuthContext.jsx";
+import { useSocket } from "../hooks/useSocket.js";
+import { useGameSocket } from "../hooks/useGameSocket.js";
 
 const STATUS_LABELS = {
   WAITING: "Waiting for players",
@@ -61,6 +63,38 @@ export default function MatchPlay() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const hasJoined = useRef(false);
+
+  // Socket.IO connection
+  const { socket, isConnected } = useSocket();
+  
+  // Game-specific socket events
+  const {
+    players: socketPlayers,
+    hostId,
+    currentQuestion,
+    timeRemaining,
+    leaderboard: socketLeaderboard,
+    matchConfig,
+    gameEnded,
+    finalRanking,
+    isReady,
+    toggleReady,
+    submitAnswer,
+    startMatch: socketStartMatch,
+    cancelMatch,
+  } = useGameSocket(socket, matchId, user?.username || user?.email || 'Guest');
+
+  // Track selected answer
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [hasAnswered, setHasAnswered] = useState(false);
+
+  // Reset answer state when new question appears
+  useEffect(() => {
+    if (currentQuestion) {
+      setSelectedAnswer(null);
+      setHasAnswered(false);
+    }
+  }, [currentQuestion]);
 
   const { data: match, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["match", matchId],
@@ -183,11 +217,18 @@ export default function MatchPlay() {
           {canStart && (
             <button
               type="button"
-              onClick={() => startMatch.mutate()}
+              onClick={() => {
+                // Use Socket.IO to start match instead of REST API
+                socketStartMatch({
+                  rounds: 2,
+                  perRound: 5,
+                  perQuestionMs: 20000,
+                });
+              }}
               className="rounded-md bg-brand-500 px-3 py-1.5 font-medium text-content-inverted transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-surface-subdued disabled:text-content-muted"
-              disabled={startMatch.isPending}
+              disabled={!socket || !socket.connected}
             >
-              {startMatch.isPending ? "Starting…" : "Start match"}
+              {socket && socket.connected ? "Start match" : "Connecting..."}
             </button>
           )}
           {canResume && (
@@ -205,20 +246,154 @@ export default function MatchPlay() {
 
       <section className="grid gap-6 rounded-lg border border-border bg-surface px-6 py-6 shadow-sm md:grid-cols-[2fr,1fr]">
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-content">Players</h2>
-            <span className="text-xs uppercase tracking-wide text-content-muted">{sortedPlayers.length} joined</span>
-          </div>
-          {sortedPlayers.length === 0 ? (
-            <div className="rounded-md border border-border bg-surface-subdued px-4 py-5 text-sm text-content-muted">
-              No players have joined yet.
+          {/* Game Ended - Final Results */}
+          {gameEnded && finalRanking.length > 0 && (
+            <div className="rounded-lg border-2 border-brand-500 bg-brand-50 px-6 py-5">
+              <h2 className="text-2xl font-bold text-brand-700">Game Over!</h2>
+              <p className="mt-2 text-sm text-brand-600">Final Rankings:</p>
+              <ol className="mt-4 space-y-3">
+                {finalRanking.map((player, index) => (
+                  <li key={index} className="flex items-center justify-between rounded-md bg-white px-4 py-3 shadow-sm">
+                    <span className="flex items-center gap-3">
+                      <span className="text-2xl font-bold text-brand-600">#{index + 1}</span>
+                      <span className="font-semibold text-content">{player.displayName}</span>
+                    </span>
+                    <span className="text-lg font-bold text-brand-600">{player.points} pts</span>
+                  </li>
+                ))}
+              </ol>
+              <div className="mt-4 flex gap-3">
+                <Link to="/lobby" className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600">
+                  Back to Lobby
+                </Link>
+                <Link to="/create" className="rounded-md border border-brand-500 px-4 py-2 text-sm font-medium text-brand-600 hover:bg-brand-100">
+                  Create New Match
+                </Link>
+              </div>
             </div>
-          ) : (
-            <ul className="space-y-3">
-              {sortedPlayers.map((player) => (
-                <PlayerRow key={player.id} player={player} isHost={player.userId === match.hostUserId} />
-              ))}
-            </ul>
+          )}
+
+          {/* Current Question */}
+          {!gameEnded && currentQuestion && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-content">Question {currentQuestion.index}</h2>
+                <div className="flex items-center gap-3">
+                  <span className="rounded-full bg-surface-subdued px-3 py-1 text-xs font-medium text-content-muted">
+                    Round {currentQuestion.round}
+                  </span>
+                  {timeRemaining !== null && (
+                    <span className={`rounded-full px-3 py-1 text-sm font-bold ${timeRemaining < 5000 ? 'bg-red-100 text-red-700' : 'bg-brand-50 text-brand-700'}`}>
+                      {Math.ceil(timeRemaining / 1000)}s
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-surface-subdued px-6 py-5">
+                <p className="text-lg font-medium text-content">{currentQuestion.text}</p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {currentQuestion.choices.map((choice, index) => {
+                  const isSelected = selectedAnswer === choice;
+                  const isCorrect = currentQuestion.revealed && index === currentQuestion.correctAnswerIndex;
+                  const isWrong = currentQuestion.revealed && isSelected && !isCorrect;
+                  
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        if (!hasAnswered && !currentQuestion.revealed) {
+                          setSelectedAnswer(choice);
+                          setHasAnswered(true);
+                          submitAnswer(currentQuestion.questionId, choice);
+                        }
+                      }}
+                      disabled={hasAnswered || currentQuestion.revealed}
+                      className={`rounded-lg border-2 px-4 py-3 text-left font-medium transition ${
+                        isCorrect
+                          ? 'border-green-500 bg-green-50 text-green-700'
+                          : isWrong
+                          ? 'border-red-500 bg-red-50 text-red-700'
+                          : isSelected
+                          ? 'border-brand-500 bg-brand-50 text-brand-700'
+                          : 'border-border bg-surface text-content hover:border-brand-500 hover:bg-brand-50'
+                      } disabled:cursor-not-allowed`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="font-bold">{String.fromCharCode(65 + index)}.</span>
+                        {choice}
+                        {isCorrect && <span className="ml-auto text-green-600 font-bold">CORRECT</span>}
+                        {isWrong && <span className="ml-auto text-red-600 font-bold">WRONG</span>}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {hasAnswered && !currentQuestion.revealed && (
+                <div className="rounded-md bg-brand-50 px-4 py-3 text-sm text-brand-700">
+                  Answer submitted! Waiting for other players...
+                </div>
+              )}
+
+              {currentQuestion.revealed && (
+                <div className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
+                  Correct answer: <strong>{currentQuestion.correctAnswer}</strong>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Waiting for game to start */}
+          {!gameEnded && !currentQuestion && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-content">Players</h2>
+                <span className="text-xs uppercase tracking-wide text-content-muted">{sortedPlayers.length} joined</span>
+              </div>
+              {sortedPlayers.length === 0 ? (
+                <div className="rounded-md border border-border bg-surface-subdued px-4 py-5 text-sm text-content-muted">
+                  No players have joined yet.
+                </div>
+              ) : (
+                <ul className="space-y-3">
+                  {sortedPlayers.map((player) => (
+                    <PlayerRow key={player.id} player={player} isHost={player.userId === match.hostUserId} />
+                  ))}
+                </ul>
+              )}
+
+              {/* Socket Connection Status */}
+              {socket && (
+                <div className="rounded-md border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${socket.connected ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <span className="font-medium text-brand-700">
+                      {socket.connected ? 'Real-time connection active' : 'Connecting to game server...'}
+                    </span>
+                  </div>
+                  {socket.connected && (
+                    <p className="mt-2 text-xs text-brand-600">
+                      Ready to play! The host can start the match when ready.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Ready Button */}
+              <button
+                onClick={toggleReady}
+                className={`w-full rounded-md px-4 py-2 font-medium transition ${
+                  isReady
+                    ? 'bg-green-500 text-white hover:bg-green-600'
+                    : 'bg-surface-subdued text-content-muted hover:bg-brand-500 hover:text-white'
+                }`}
+              >
+                {isReady ? 'Ready!' : 'Mark as Ready'}
+              </button>
+            </div>
           )}
         </div>
 
@@ -238,35 +413,61 @@ export default function MatchPlay() {
                 <dt>Max players</dt>
                 <dd>{match.maxPlayers ?? "—"}</dd>
               </div>
+              {matchConfig && (
+                <>
+                  <div className="flex justify-between">
+                    <dt>Rounds</dt>
+                    <dd>{matchConfig.rounds}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt>Per Round</dt>
+                    <dd>{matchConfig.perRound} questions</dd>
+                  </div>
+                </>
+              )}
             </dl>
           </div>
 
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-content-muted">Live scoreboard</h3>
             <ol className="mt-3 space-y-2 text-sm">
-              {sortedPlayers.length === 0 ? (
+              {(socketLeaderboard.length > 0 ? socketLeaderboard : sortedPlayers).length === 0 ? (
                 <li>No scores yet.</li>
               ) : (
-                sortedPlayers.slice(0, 5).map((player, index) => (
-                  <li key={player.id} className="flex items-center justify-between rounded bg-surface px-3 py-2">
+                (socketLeaderboard.length > 0 ? socketLeaderboard : sortedPlayers.slice(0, 5)).map((player, index) => (
+                  <li key={player.id || index} className="flex items-center justify-between rounded bg-surface px-3 py-2">
                     <span className="flex items-center gap-2">
                       <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-600">
                         {index + 1}
                       </span>
                       <span className="font-medium text-content">
-                        {player.User?.username ?? player.userId ?? "Player"}
+                        {player.displayName || player.User?.username || player.userId || "Player"}
                       </span>
                     </span>
-                    <span className="font-semibold text-content">{player.score ?? 0}</span>
+                    <span className="font-semibold text-content">{player.points || player.score || 0}</span>
                   </li>
                 ))
               )}
             </ol>
           </div>
 
-          <div className="rounded-md border border-dashed border-border px-3 py-3 text-xs text-content-muted">
-            Gameplay streaming and answer submission will surface here once the WebSocket integration is enabled. For now, manage lobby state and scores above.
-          </div>
+          {/* Real-time Players from Socket */}
+          {socketPlayers.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-content-muted">Live Players</h3>
+              <ul className="mt-3 space-y-2 text-xs">
+                {socketPlayers.map((player, index) => (
+                  <li key={index} className="flex items-center justify-between rounded bg-surface px-2 py-1">
+                    <span className="flex items-center gap-2">
+                      <span className={`h-2 w-2 rounded-full ${player.ready ? 'bg-green-500' : 'bg-gray-400'}`} />
+                      {player.displayName}
+                    </span>
+                    <span>{player.points} pts</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </aside>
       </section>
     </main>

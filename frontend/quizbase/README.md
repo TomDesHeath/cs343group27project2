@@ -1,12 +1,26 @@
-# React + Vite
+# Quizbase Frontend (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Overview
+- React app for the Quizbase trivia game.
+- Talks to the backend API at `VITE_API_BASE_URL` (defaults to `http://localhost:4000`).
 
-Currently, two official plugins are available:
+Requirements
+- Node.js 18+ and npm.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Setup
+- Create `.env`:
+  - `VITE_API_BASE_URL=http://localhost:4000`
+- Install deps:
+  - `npm install`
+- Start dev server:
+  - `npm run dev` (opens at `http://localhost:5173`)
 
-## Expanding the ESLint configuration
+Scripts
+- `npm run dev`    Start Vite dev server
+- `npm run build`  Production build to `dist/`
+- `npm run preview` Preview the production build
+- `npm run lint`   Lint sources
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Notes
+- The frontend expects the API under `${VITE_API_BASE_URL}/api` (handled automatically by the shared client).
+- Ensure the backend is running and CORS allows `http://localhost:5173` (see `backend/.env`).
