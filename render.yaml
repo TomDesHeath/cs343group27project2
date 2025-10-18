@@ -11,13 +11,11 @@ services:
       cd backend
       npm install
       npm run build
+      npx prisma migrate deploy
+      npx prisma generate
     startCommand: |
       cd backend
       npm run start
-    postDeployCommand: |
-      cd backend
-      npx prisma migrate deploy
-      npx prisma generate
     envVars:
       - key: NODE_ENV
         value: production
@@ -48,9 +46,7 @@ services:
       cd frontend/quizbase
       npm install
       npm run build
-    startCommand: |
-      cd frontend/quizbase
-      npx serve dist -l $PORT
+    staticPublishPath: frontend/quizbase/dist
     envVars:
       - key: VITE_API_BASE_URL
         value: https://your-backend.onrender.com/api
