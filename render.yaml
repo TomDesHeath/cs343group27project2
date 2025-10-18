@@ -40,7 +40,7 @@ services:
       - key: BCRYPT_ROUNDS
         value: "12"
 
-  - type: static
+  - type: static_site
     name: quizbase-frontend
     plan: free
     buildCommand: |
